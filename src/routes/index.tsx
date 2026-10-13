@@ -173,6 +173,15 @@ function Index() {
     setResult(analyzeMessage(message));
   };
 
+  // Auto-call the emergency number when the score is 9.5 or higher
+  useEffect(() => {
+    if (result && result.score >= AUTO_CALL_THRESHOLD) {
+      window.location.href = `tel:${EMERGENCY_NUMBER}`;
+    }
+  }, [result]);
+
+  const showEmergencyCall = result !== null && result.score > MANUAL_CALL_THRESHOLD;
+
   const style = result ? LEVEL_STYLE[result.level] : null;
   const LevelIcon = style?.icon;
 
