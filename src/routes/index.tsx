@@ -261,6 +261,36 @@ function Index() {
               </p>
             </div>
 
+            {/* Emergency call */}
+            {showEmergencyCall && (
+              <div className="rounded-2xl border border-danger/40 bg-danger/10 p-5 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-danger text-danger-foreground">
+                    <PhoneCall className="h-6 w-6" />
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-base font-semibold text-foreground">
+                      {result.score >= AUTO_CALL_THRESHOLD
+                        ? "Extreme danger — calling emergency support now…"
+                        : "High danger — talk to someone you trust right now"}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {result.score >= AUTO_CALL_THRESHOLD
+                        ? "If the call does not start automatically, tap the button below."
+                        : "This message looks very dangerous. Call for help before doing anything."}
+                    </p>
+                    <a
+                      href={`tel:${EMERGENCY_NUMBER}`}
+                      className="mt-3 inline-flex items-center gap-2 rounded-xl bg-danger px-5 py-3 text-sm font-semibold text-danger-foreground transition-opacity hover:opacity-90"
+                    >
+                      <PhoneCall className="h-4 w-4" />
+                      Call now: {EMERGENCY_NUMBER}
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Explanation */}
             <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
               <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">
