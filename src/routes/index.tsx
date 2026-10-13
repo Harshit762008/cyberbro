@@ -16,17 +16,17 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "CyberSaathi AI — आपका साइबर सुरक्षा साथी" },
+      { title: "CyberSaathi AI — Your Cyber Safety Companion" },
       {
         name: "description",
         content:
-          "संदिग्ध मैसेज पेस्ट करें और तुरंत जानें कि वह धोखाधड़ी है या नहीं। आसान हिंदी में खतरे का स्कोर और सुरक्षा सलाह।",
+          "Paste a suspicious message and instantly find out if it is a scam. Get a 0-10 danger score, a plain-English risk explanation, and safety advice.",
       },
-      { property: "og:title", content: "CyberSaathi AI — आपका साइबर सुरक्षा साथी" },
+      { property: "og:title", content: "CyberSaathi AI — Your Cyber Safety Companion" },
       {
         property: "og:description",
         content:
-          "संदिग्ध मैसेज का विश्लेषण करें, खतरे का स्कोर देखें और सरल हिंदी में सुरक्षा सलाह पाएं।",
+          "Analyse suspicious SMS, WhatsApp and email messages, see a 0-10 danger score, and get simple safety advice.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -43,14 +43,46 @@ type Analysis = {
 };
 
 const RISK_SIGNALS: { pattern: RegExp; weight: number; reason: string }[] = [
-  { pattern: /(otp|ओटीपी)/i, weight: 3, reason: "इसमें OTP मांगा गया है — OTP कभी किसी को न दें।" },
-  { pattern: /(password|पासवर्ड|पासवर्ड)/i, weight: 3, reason: "इसमें पासवर्ड मांगा गया है — यह बहुत खतरनाक है।" },
-  { pattern: /(urgent|तुरंत|जल्दी|immediately|तत्काल)/i, weight: 2, reason: "यह मैसेज जल्दबाजी करा रहा है — घोटालेबाज़ ऐसा ही करते हैं।" },
-  { pattern: /(click|क्लिक|http:\/\/|https:\/\/|bit\.ly|tinyurl|short)/i, weight: 2, reason: "इसमें लिंक पर क्लिक करने को कहा गया है।" },
-  { pattern: /(lottery|लॉटरी|winner|जीते|prize|इनाम|gift|उपहार)/i, weight: 3, reason: "लॉटरी या इनाम जीतने का लालच दिया गया है — यह आम घोटाला है।" },
-  { pattern: /(bank|बैंक|kyc|account.*(block|बंद)|खाता)/i, weight: 2, reason: "बैंक या KYC का नाम लेकर डराया गया है।" },
-  { pattern: /(verify|सत्यापित|update.*detail|जानकारी.*अपडेट)/i, weight: 2, reason: "जानकारी 'वेरिफाई' करने को कहा गया है — सावधान रहें।" },
-  { pattern: /(paisa|पैसे|money|रुपये|₹|refund|रिफंड)/i, weight: 1, reason: "पैसों की बात की गई है — ध्यान से जांचें।" },
+  {
+    pattern: /(otp|ओटीपी|one time password)/i,
+    weight: 3,
+    reason: "It asks for your OTP — never share an OTP with anyone.",
+  },
+  {
+    pattern: /(password|पासवर्ड|passcode|pin)/i,
+    weight: 3,
+    reason: "It asks for your password — that is a serious red flag.",
+  },
+  {
+    pattern: /(urgent|तुरंत|जल्दी|immediately|तत्काल|hurry|now only|last day)/i,
+    weight: 2,
+    reason: "It pushes you to hurry — scammers create fake urgency on purpose.",
+  },
+  {
+    pattern: /(click|क्लिक|http:\/\/|https:\/\/|bit\.ly|tinyurl|short)/i,
+    weight: 2,
+    reason: "It tells you to click a link — that link can steal your details.",
+  },
+  {
+    pattern: /(lottery|लॉटरी|winner|जीत|prize|इनाम|gift|उपहार|congratulations)/i,
+    weight: 3,
+    reason: "It dangles a lottery or prize you never entered — a very common scam.",
+  },
+  {
+    pattern: /(bank|बैंक|kyc|account.*(block|suspend|बंद)|खाता)/i,
+    weight: 2,
+    reason: "It tries to scare you with your bank account or KYC.",
+  },
+  {
+    pattern: /(verify|सत्यापित|update.*detail|जानकारी.*अपडेट|confirm your)/i,
+    weight: 2,
+    reason: "It asks you to 'verify' or 'update' details — treat this with caution.",
+  },
+  {
+    pattern: /(पैसे|money|रुपये|₹|refund|रिफंड|payment|pay now)/i,
+    weight: 1,
+    reason: "It talks about money — check every claim carefully.",
+  },
 ];
 
 function analyzeMessage(text: string): Analysis {
@@ -68,29 +100,29 @@ function analyzeMessage(text: string): Analysis {
   const level: Analysis["level"] = score <= 3 ? "safe" : score <= 6 ? "warning" : "danger";
 
   if (reasons.length === 0) {
-    reasons.push("इस मैसेज में कोई साफ़ खतरनाक संकेत नहीं मिला।");
+    reasons.push("No obvious danger signs were found in this message.");
   }
 
   const tips =
     level === "safe"
       ? [
-          "फिर भी अनजान लिंक पर क्लिक न करें।",
-          "अपनी निजी जानकारी किसी से साझा न करें।",
-          "शक हो तो भरोसेमंद व्यक्ति से पूछ लें।",
+          "Still, do not click links from people you do not know.",
+          "Do not share personal details with anyone over message or call.",
+          "If something feels off, ask someone you trust before acting.",
         ]
       : level === "warning"
         ? [
-            "इस मैसेज में दिए लिंक पर क्लिक न करें।",
-            "OTP या पासवर्ड कभी किसी को न दें।",
-            "बैंक/कंपनी के आधिकारिक नंबर पर खुद कॉल करके पता करें।",
-            "मैसेज को रिपोर्ट और ब्लॉक करें।",
+            "Do not click any link given in this message.",
+            "Never share your OTP or password with anyone.",
+            "Call your bank or the company on their official number to check yourself.",
+            "Report and block this message.",
           ]
         : [
-            "तुरंत रुकें — इस मैसेज पर कोई कार्रवाई न करें।",
-            "किसी भी लिंक पर क्लिक न करें और कोई पैसा न भेजें।",
-            "OTP, पासवर्ड या बैंक की जानकारी बिल्कुल न दें।",
-            "साइबर क्राइम हेल्पलाइन 1930 पर कॉल करें या cybercrime.gov.in पर शिकायत करें।",
-            "संदेश भेजने वाले को ब्लॉक और रिपोर्ट करें।",
+            "Stop right there — do not act on this message.",
+            "Do not click any link and do not send any money.",
+            "Never share your OTP, password or bank details.",
+            "Call the cyber crime helpline 1930 or complain at cybercrime.gov.in.",
+            "Block and report the sender.",
           ];
 
   return { score, level, reasons, tips };
@@ -98,22 +130,22 @@ function analyzeMessage(text: string): Analysis {
 
 const LEVEL_STYLE = {
   safe: {
-    label: "कम खतरा",
-    sub: "यह मैसेज सुरक्षित लग रहा है",
+    label: "Low risk",
+    sub: "This message looks safe",
     icon: ShieldCheck,
     badge: "bg-safe/15 text-safe",
     bar: "bg-safe",
   },
   warning: {
-    label: "सावधान रहें",
-    sub: "इस मैसेज में कुछ खतरनाक संकेत हैं",
+    label: "Be careful",
+    sub: "This message has some danger signs",
     icon: AlertTriangle,
     badge: "bg-warning/20 text-warning",
     bar: "bg-warning",
   },
   danger: {
-    label: "बहुत खतरनाक!",
-    sub: "यह मैसेज धोखाधड़ी हो सकता है",
+    label: "Very dangerous!",
+    sub: "This message is likely a scam",
     icon: ShieldAlert,
     badge: "bg-danger/15 text-danger",
     bar: "bg-danger",
@@ -121,11 +153,11 @@ const LEVEL_STYLE = {
 } as const;
 
 const COMING_SOON = [
-  { icon: ScanLine, title: "QR कोड स्कैन", desc: "खतरनाक QR कोड पहचानें" },
-  { icon: Link2, title: "लिंक जांच", desc: "किसी भी लिंक की सुरक्षा जांचें" },
-  { icon: KeyRound, title: "पासवर्ड जांच", desc: "जानें पासवर्ड मज़बूत है या नहीं" },
-  { icon: Mic, title: "वॉइस सहायक", desc: "बोलकर सवाल पूछें" },
-  { icon: PhoneCall, title: "आपातकालीन सहायता", desc: "तुरंत मदद से जुड़ें" },
+  { icon: ScanLine, title: "QR Code Scan", desc: "Spot harmful QR codes" },
+  { icon: Link2, title: "Link Check", desc: "Check if any link is safe" },
+  { icon: KeyRound, title: "Password Check", desc: "See if your password is strong" },
+  { icon: Mic, title: "Voice Assistant", desc: "Ask questions by speaking" },
+  { icon: PhoneCall, title: "Emergency Support", desc: "Get help right away" },
 ];
 
 function Index() {
@@ -149,10 +181,8 @@ function Index() {
             <ShieldCheck className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-foreground">
-              CyberSaathi AI
-            </h1>
-            <p className="text-xs text-muted-foreground">आपका साइबर सुरक्षा साथी</p>
+            <h1 className="text-xl font-bold tracking-tight text-foreground">CyberSaathi AI</h1>
+            <p className="text-xs text-muted-foreground">Your cyber safety companion</p>
           </div>
         </div>
       </header>
@@ -160,12 +190,10 @@ function Index() {
       <main className="mx-auto max-w-3xl space-y-6 px-4 py-6">
         {/* Intro */}
         <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <h2 className="text-lg font-semibold text-foreground">
-            संदिग्ध मैसेज की जांच करें
-          </h2>
+          <h2 className="text-lg font-semibold text-foreground">Check a suspicious message</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            कोई भी शक भरा SMS, WhatsApp या ईमेल मैसेज यहाँ पेस्ट करें — हम बताएंगे कि वह
-            धोखाधड़ी है या नहीं।
+            Paste any doubtful SMS, WhatsApp or email message here — we will tell you whether it is
+            a scam.
           </p>
 
           <textarea
@@ -173,7 +201,7 @@ function Index() {
             onChange={(e) => setMessage(e.target.value)}
             rows={5}
             maxLength={2000}
-            placeholder="यहाँ मैसेज पेस्ट करें… जैसे: 'बधाई हो! आपने ₹25,000 की लॉटरी जीती है। तुरंत इस लिंक पर क्लिक करें और OTP दें।'"
+            placeholder="Paste the message here… e.g. 'Congrats! You have won a ₹25,000 lottery. Click this link now and share your OTP.'"
             className="mt-4 w-full resize-y rounded-xl border border-input bg-background p-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
 
@@ -183,7 +211,7 @@ function Index() {
             className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
           >
             <Sparkles className="h-4 w-4" />
-            जांच करें (Analyze)
+            Analyze
           </button>
         </section>
 
@@ -194,7 +222,9 @@ function Index() {
             <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${style.badge}`}>
+                  <span
+                    className={`flex h-11 w-11 items-center justify-center rounded-xl ${style.badge}`}
+                  >
                     <LevelIcon className="h-6 w-6" />
                   </span>
                   <div>
@@ -214,15 +244,15 @@ function Index() {
                 />
               </div>
               <p className="mt-2 text-xs text-muted-foreground">
-                खतरे का स्कोर: 0 = बिल्कुल सुरक्षित, 10 = बहुत खतरनाक
+                Danger score: 0 = completely safe, 10 = very dangerous
               </p>
             </div>
 
-            {/* Hindi explanation */}
+            {/* Explanation */}
             <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
               <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">
                 <AlertTriangle className="h-5 w-5 text-primary" />
-                सरल हिंदी में समझिए
+                Why this is risky
               </h3>
               <ul className="mt-3 space-y-2">
                 {result.reasons.map((reason, i) => (
@@ -238,7 +268,7 @@ function Index() {
             <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
               <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">
                 <CheckCircle2 className="h-5 w-5 text-safe" />
-                सुरक्षा की सलाह
+                Safety recommendations
               </h3>
               <ul className="mt-3 space-y-2">
                 {result.tips.map((tip, i) => (
@@ -254,9 +284,9 @@ function Index() {
 
         {/* Coming soon */}
         <section>
-          <h3 className="text-base font-semibold text-foreground">जल्द आ रहा है</h3>
+          <h3 className="text-base font-semibold text-foreground">Coming soon</h3>
           <p className="text-xs text-muted-foreground">
-            ये सुविधाएँ आने वाले समय में जोड़ी जाएंगी
+            These features will be added in a later update
           </p>
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {COMING_SOON.map(({ icon: Icon, title, desc }) => (
@@ -270,7 +300,7 @@ function Index() {
                 <p className="mt-2 text-sm font-semibold text-foreground">{title}</p>
                 <p className="mt-0.5 text-xs text-muted-foreground">{desc}</p>
                 <span className="mt-2 inline-block rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                  जल्द आ रहा है
+                  Coming soon
                 </span>
               </div>
             ))}
@@ -278,7 +308,8 @@ function Index() {
         </section>
 
         <footer className="pb-6 pt-2 text-center text-xs text-muted-foreground">
-          साइबर अपराध की शिकायत: हेल्पलाइन <span className="font-semibold text-foreground">1930</span> या{" "}
+          Report cyber crime: helpline{" "}
+          <span className="font-semibold text-foreground">1930</span> or{" "}
           <span className="font-semibold text-foreground">cybercrime.gov.in</span>
         </footer>
       </main>
