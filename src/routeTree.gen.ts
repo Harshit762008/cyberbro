@@ -10,33 +10,102 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EmergencyRouteImport } from './routes/emergency'
+import { Route as LinkCheckRouteImport } from './routes/link-check'
+import { Route as PasswordCheckRouteImport } from './routes/password-check'
+import { Route as QrScanRouteImport } from './routes/qr-scan'
+import { Route as VoiceRouteImport } from './routes/voice'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmergencyRoute = EmergencyRouteImport.update({
+  id: '/emergency',
+  path: '/emergency',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LinkCheckRoute = LinkCheckRouteImport.update({
+  id: '/link-check',
+  path: '/link-check',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PasswordCheckRoute = PasswordCheckRouteImport.update({
+  id: '/password-check',
+  path: '/password-check',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QrScanRoute = QrScanRouteImport.update({
+  id: '/qr-scan',
+  path: '/qr-scan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VoiceRoute = VoiceRouteImport.update({
+  id: '/voice',
+  path: '/voice',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/emergency': typeof EmergencyRoute
+  '/link-check': typeof LinkCheckRoute
+  '/password-check': typeof PasswordCheckRoute
+  '/qr-scan': typeof QrScanRoute
+  '/voice': typeof VoiceRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/emergency': typeof EmergencyRoute
+  '/link-check': typeof LinkCheckRoute
+  '/password-check': typeof PasswordCheckRoute
+  '/qr-scan': typeof QrScanRoute
+  '/voice': typeof VoiceRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/emergency': typeof EmergencyRoute
+  '/link-check': typeof LinkCheckRoute
+  '/password-check': typeof PasswordCheckRoute
+  '/qr-scan': typeof QrScanRoute
+  '/voice': typeof VoiceRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/emergency'
+    | '/link-check'
+    | '/password-check'
+    | '/qr-scan'
+    | '/voice'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/emergency'
+    | '/link-check'
+    | '/password-check'
+    | '/qr-scan'
+    | '/voice'
+  id:
+    | '__root__'
+    | '/'
+    | '/emergency'
+    | '/link-check'
+    | '/password-check'
+    | '/qr-scan'
+    | '/voice'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  EmergencyRoute: typeof EmergencyRoute
+  LinkCheckRoute: typeof LinkCheckRoute
+  PasswordCheckRoute: typeof PasswordCheckRoute
+  QrScanRoute: typeof QrScanRoute
+  VoiceRoute: typeof VoiceRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +117,51 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/emergency': {
+      id: '/emergency'
+      path: '/emergency'
+      fullPath: '/emergency'
+      preLoaderRoute: typeof EmergencyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/link-check': {
+      id: '/link-check'
+      path: '/link-check'
+      fullPath: '/link-check'
+      preLoaderRoute: typeof LinkCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/password-check': {
+      id: '/password-check'
+      path: '/password-check'
+      fullPath: '/password-check'
+      preLoaderRoute: typeof PasswordCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/qr-scan': {
+      id: '/qr-scan'
+      path: '/qr-scan'
+      fullPath: '/qr-scan'
+      preLoaderRoute: typeof QrScanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/voice': {
+      id: '/voice'
+      path: '/voice'
+      fullPath: '/voice'
+      preLoaderRoute: typeof VoiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  EmergencyRoute: EmergencyRoute,
+  LinkCheckRoute: LinkCheckRoute,
+  PasswordCheckRoute: PasswordCheckRoute,
+  QrScanRoute: QrScanRoute,
+  VoiceRoute: VoiceRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
