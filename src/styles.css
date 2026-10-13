@@ -49,6 +49,7 @@
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
   --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
   --color-warning: var(--warning);
   --color-safe: var(--safe);
   --color-chart-1: var(--chart-1);
@@ -83,6 +84,7 @@
   --accent: oklch(0.92 0.05 195);
   --accent-foreground: oklch(0.3 0.08 200);
   --danger: oklch(0.58 0.22 27);
+  --danger-foreground: oklch(0.99 0.005 200);
   --warning: oklch(0.75 0.15 75);
   --safe: oklch(0.65 0.15 155);
   --destructive: oklch(0.577 0.245 27.325);
