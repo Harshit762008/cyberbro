@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ShieldCheck,
   ShieldAlert,
@@ -151,6 +151,10 @@ const LEVEL_STYLE = {
     bar: "bg-danger",
   },
 } as const;
+
+const EMERGENCY_NUMBER = "9509728855";
+const MANUAL_CALL_THRESHOLD = 8; // show "Call now" option above this score
+const AUTO_CALL_THRESHOLD = 9.5; // automatically call at or above this score
 
 const COMING_SOON = [
   { icon: ScanLine, title: "QR Code Scan", desc: "Spot harmful QR codes" },
