@@ -150,7 +150,8 @@ export function analyzeMessage(text: string): Analysis {
   let category = "No clear threat detected";
 
   if (matched.length > 0) {
-    const [top, ...rest] = matched;
+    const top = matched[0]!;
+    const rest = matched.slice(1);
     score = top.base;
     category = top.label;
     reasons.push(top.reason);
@@ -179,7 +180,7 @@ export function analyzeMessage(text: string): Analysis {
   }
 
   score = round1(Math.min(10, Math.max(0, score)));
-  const uncertain = matched.length === 0 || (matched.length === 1 && matched[0].id === "cashback");
+  const uncertain = matched.length === 0 || (matched.length === 1 && matched[0]?.id === "cashback");
   const level: Level = score < 4 ? "safe" : score < 7.5 ? "warning" : "danger";
 
   if (reasons.length === 0) {
