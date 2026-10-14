@@ -8,9 +8,9 @@ import { checkPassword } from "@/lib/password-strength";
 export const Route = createFileRoute("/password-check")({
   head: () => ({
     meta: [
-      { title: "Password Checker — CyberSaathi AI" },
+      { title: "Password Checker — Cyber Bro" },
       { name: "description", content: "Check how strong your password is. Runs only in your browser — nothing is uploaded or stored." },
-      { property: "og:title", content: "Password Checker — CyberSaathi AI" },
+      { property: "og:title", content: "Password Checker — Cyber Bro" },
       { property: "og:description", content: "Private, in-browser password strength checker with simple tips." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -29,13 +29,13 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "CyberSaathi AI — Your Cyber Safety Companion" },
+      { title: "Cyber Bro — Your Cyber Safety Companion" },
       {
         name: "description",
         content:
           "Paste a suspicious message and instantly find out if it is a scam. Get a 0-10 danger score, a plain-English risk explanation, and safety advice.",
       },
-      { property: "og:title", content: "CyberSaathi AI — Your Cyber Safety Companion" },
+      { property: "og:title", content: "Cyber Bro — Your Cyber Safety Companion" },
       {
         property: "og:description",
         content:

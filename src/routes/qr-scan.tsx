@@ -9,9 +9,9 @@ import { looksLikeUrl } from "@/lib/url-check";
 export const Route = createFileRoute("/qr-scan")({
   head: () => ({
     meta: [
-      { title: "QR Code Scanner — CyberSaathi AI" },
+      { title: "QR Code Scanner — Cyber Bro" },
       { name: "description", content: "Upload a QR code image and safely read what's inside without opening any link." },
-      { property: "og:title", content: "QR Code Scanner — CyberSaathi AI" },
+      { property: "og:title", content: "QR Code Scanner — Cyber Bro" },
       { property: "og:description", content: "Decode QR images on your device and see the content before you act on it." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
