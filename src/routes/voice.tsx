@@ -63,7 +63,11 @@ function VoicePage() {
     rec.continuous = false;
     rec.onresult = (e) => {
       let t = "";
-      for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
+      for (let i = 0; i < e.results.length; i++) {
+        const result = e.results[i];
+        const first = result?.[0];
+        if (first) t += first.transcript;
+      }
       setText(t);
     };
     rec.onerror = (e) => {

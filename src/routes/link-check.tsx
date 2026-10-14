@@ -7,7 +7,7 @@ import { checkUrl, type UrlCheck } from "@/lib/url-check";
 
 export const Route = createFileRoute("/link-check")({
   validateSearch: (search: Record<string, unknown>): { url?: string } =>
-    typeof search.url === "string" ? { url: search.url.slice(0, 2000) } : {},
+    typeof search["url"] === "string" ? { url: search["url"].slice(0, 2000) } : {},
   head: () => ({
     meta: [
       { title: "Link Checker — Cyber Bro" },
