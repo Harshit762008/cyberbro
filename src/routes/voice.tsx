@@ -154,7 +154,7 @@ function VoicePage() {
       ) : (
         <section className={`${cardClass} space-y-2`} aria-live="polite">
           <p className="text-lg font-semibold text-foreground">
-            {LEVEL_TEXT[result.level]} — {result.score}/10
+            {LEVEL_TEXT[result.level]} — {result.score.toFixed(1)}/10
           </p>
           <ul className="list-disc space-y-1 pl-5 text-sm text-foreground">
             {result.reasons.map((r) => <li key={r}>{r}</li>)}
