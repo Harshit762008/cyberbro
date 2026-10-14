@@ -8,9 +8,9 @@ import { analyzeMessage, type Analysis } from "@/lib/analyze-message";
 export const Route = createFileRoute("/voice")({
   head: () => ({
     meta: [
-      { title: "Voice Assistant — CyberSaathi AI" },
+      { title: "Voice Assistant — Cyber Bro" },
       { name: "description", content: "Speak or read out a suspicious message and get a quick demo safety check." },
-      { property: "og:title", content: "Voice Assistant — CyberSaathi AI" },
+      { property: "og:title", content: "Voice Assistant — Cyber Bro" },
       { property: "og:description", content: "Use your voice to check a suspicious message, using your browser's free speech recognition." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

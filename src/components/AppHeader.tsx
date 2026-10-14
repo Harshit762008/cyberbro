@@ -5,12 +5,12 @@ export function AppHeader({ showBack = false }: { showBack?: boolean }) {
   return (
     <header className="border-b border-border bg-card">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-4">
-        <Link to="/" className="flex items-center gap-3" aria-label="CyberSaathi AI dashboard">
+        <Link to="/" className="flex items-center gap-3" aria-label="Cyber Bro dashboard">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             <ShieldCheck className="h-6 w-6" />
           </div>
           <div>
-            <p className="font-heading text-xl font-bold tracking-tight text-foreground">CyberSaathi AI</p>
+            <p className="font-heading text-xl font-bold tracking-tight text-foreground">Cyber Bro</p>
             <p className="text-xs text-muted-foreground">Your cyber safety companion</p>
           </div>
         </Link>

@@ -7,9 +7,9 @@ import { EMERGENCY_NUMBER } from "@/lib/analyze-message";
 export const Route = createFileRoute("/emergency")({
   head: () => ({
     meta: [
-      { title: "Emergency Support — CyberSaathi AI" },
+      { title: "Emergency Support — Cyber Bro" },
       { name: "description", content: "Get help fast if you have been scammed: call support, the 1930 cyber crime helpline, or report online." },
-      { property: "og:title", content: "Emergency Support — CyberSaathi AI" },
+      { property: "og:title", content: "Emergency Support — Cyber Bro" },
       { property: "og:description", content: "Quick steps and contacts if you think you've been scammed." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
