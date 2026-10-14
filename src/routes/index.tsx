@@ -20,8 +20,7 @@ import {
 import { AppHeader } from "@/components/AppHeader";
 import {
   analyzeMessage,
-  shouldAutoCall,
-  shouldShowCallOption,
+  shouldShowEmergency,
   EMERGENCY_NUMBER,
   type Analysis,
 } from "@/lib/analyze-message";
@@ -119,12 +118,12 @@ function Index() {
 
   // Auto-call the emergency number when the score is 9.5 or higher
   useEffect(() => {
-    if (result && shouldAutoCall(result.score)) {
+    if (result && result.score > 9.5) {
       window.location.href = `tel:${EMERGENCY_NUMBER}`;
     }
   }, [result]);
 
-  const showEmergencyCall = result !== null && shouldShowCallOption(result.score);
+  const showEmergencyCall = result !== null && shouldShowEmergency(result);
 
   const style = result ? LEVEL_STYLE[result.level] : null;
   const LevelIcon = style?.icon;
@@ -214,11 +213,15 @@ function Index() {
                   </span>
                   <div>
                     <p className="text-base font-semibold text-foreground">{style.label}</p>
-                    <p className="text-xs text-muted-foreground">{style.sub}</p>
+                    <p className="text-xs text-muted-foreground">{result.band}</p>
+                    <p className="mt-0.5 text-xs font-medium text-foreground">
+                      Category: {result.category}
+                      {result.uncertain && " · Uncertain"}
+                    </p>
                   </div>
                 </div>
                 <p className="text-3xl font-bold tabular-nums text-foreground" data-testid="score">
-                  {result.score}
+                  {result.score.toFixed(1)}
                   <span className="text-base font-medium text-muted-foreground">/10</span>
                 </p>
               </div>
@@ -243,14 +246,14 @@ function Index() {
                   </span>
                   <div className="flex-1">
                     <p className="text-base font-semibold text-foreground">
-                      {shouldAutoCall(result.score)
-                        ? "Extreme danger — calling emergency support now…"
-                        : "High danger — talk to someone you trust right now"}
+                      {result.score > 9.5
+                        ? "Critical danger — calling emergency support now…"
+                        : "Immediate danger reported — get help now"}
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      {shouldAutoCall(result.score)
+                      {result.score > 9.5
                         ? "If the call does not start automatically, tap the button below."
-                        : "This message looks very dangerous. Call for help before doing anything."}
+                        : "Don't wait for the score — call for help, or dial 112 for police."}
                     </p>
                     <a
                       href={`tel:${EMERGENCY_NUMBER}`}
@@ -268,7 +271,7 @@ function Index() {
             <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
               <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
                 <AlertTriangle className="h-5 w-5 text-primary" />
-                Why this is risky
+                Why this score
               </h2>
               <ul className="mt-3 space-y-2">
                 {result.reasons.map((reason, i) => (
