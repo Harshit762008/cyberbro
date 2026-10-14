@@ -317,7 +317,10 @@ function QrPage() {
       {state.kind === "success" && result && (
         <section className={`${cardClass} space-y-4`} aria-live="polite">
           <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 ${verdictStyles[result.verdict].className}`}>
-            <result.Icon className="h-5 w-5 shrink-0" />
+            {(() => {
+              const VIcon = verdictStyles[result.verdict].Icon;
+              return <VIcon className="h-5 w-5 shrink-0" />;
+            })()}
             <p className="font-semibold" data-testid="qr-verdict">
               {verdictStyles[result.verdict].label}
             </p>
