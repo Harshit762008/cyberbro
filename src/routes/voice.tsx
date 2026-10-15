@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Info, Mic, MicOff, Sparkles, X } from "lucide-react";
+import { Info, Mic, MicOff, Sparkles, Volume2, X } from "lucide-react";
 
 import { PageShell, cardClass, primaryBtn, secondaryBtn } from "@/components/AppHeader";
 import { analyzeMessage, type Analysis } from "@/lib/analyze-message";
@@ -205,6 +205,9 @@ function VoicePage() {
           <ul className="list-disc space-y-1 pl-5 text-sm text-foreground">
             {result.reasons.map((r) => <li key={r}>{r}</li>)}
           </ul>
+          <button type="button" onClick={() => speakResult(result)} className={secondaryBtn}>
+            <Volume2 className="h-4 w-4" /> Listen again
+          </button>
           <p className="text-xs text-muted-foreground">For the full report and emergency options, paste the message on the dashboard.</p>
         </section>
       )}
