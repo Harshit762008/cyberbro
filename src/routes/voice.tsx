@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Info, Mic, MicOff, Sparkles, X } from "lucide-react";
+import { Info, Mic, MicOff, Sparkles, Volume2, X } from "lucide-react";
 
 import { PageShell, cardClass, primaryBtn, secondaryBtn } from "@/components/AppHeader";
 import { analyzeMessage, type Analysis } from "@/lib/analyze-message";
@@ -39,6 +39,36 @@ function getRecognitionCtor(): (new () => Recognition) | null {
 
 const LEVEL_TEXT = { safe: "Low risk", warning: "Be careful", danger: "Very dangerous!" } as const;
 
+function pickVoice(): SpeechSynthesisVoice | null {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return null;
+  const voices = window.speechSynthesis.getVoices();
+  return (
+    voices.find((v) => v.lang.toLowerCase().startsWith("en-in")) ??
+    voices.find((v) => v.lang.toLowerCase().startsWith("en")) ??
+    voices[0] ??
+    null
+  );
+}
+
+function speakResult(r: Analysis) {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(
+    `${LEVEL_TEXT[r.level]}. Danger score ${r.score.toFixed(1)} out of 10. ${r.reasons[0] ?? ""} ${r.tips[0] ?? ""}`,
+  );
+  const voice = pickVoice();
+  if (voice) {
+    u.voice = voice;
+    u.lang = voice.lang;
+  } else {
+    u.lang = "en-IN";
+  }
+  u.rate = 1;
+  u.volume = 1;
+  window.speechSynthesis.speak(u);
+  return true;
+}
+
 function VoicePage() {
   const [supported, setSupported] = useState<boolean | null>(null);
   const [listening, setListening] = useState(false);
@@ -49,6 +79,11 @@ function VoicePage() {
 
   useEffect(() => {
     setSupported(getRecognitionCtor() !== null);
+    // Pre-load speech synthesis voices — Chrome loads them asynchronously,
+    // and speaking before they are ready can silently fail.
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.getVoices();
+    }
     return () => recRef.current?.stop();
   }, []);
 
@@ -147,13 +182,8 @@ function VoicePage() {
           onClick={() => {
             const r = analyzeMessage(text);
             setResult(r);
-            if (typeof window !== "undefined" && "speechSynthesis" in window) {
-              window.speechSynthesis.cancel();
-              const u = new SpeechSynthesisUtterance(
-                `${LEVEL_TEXT[r.level]}. Danger score ${r.score.toFixed(1)} out of 10. ${r.reasons[0] ?? ""} ${r.tips[0] ?? ""}`,
-              );
-              u.lang = "en-IN";
-              window.speechSynthesis.speak(u);
+            if (!speakResult(r)) {
+              setError("Audio playback is not supported in this browser.");
             }
           }}
           disabled={text.trim().length < 5}
@@ -175,6 +205,9 @@ function VoicePage() {
           <ul className="list-disc space-y-1 pl-5 text-sm text-foreground">
             {result.reasons.map((r) => <li key={r}>{r}</li>)}
           </ul>
+          <button type="button" onClick={() => speakResult(result)} className={secondaryBtn}>
+            <Volume2 className="h-4 w-4" /> Listen again
+          </button>
           <p className="text-xs text-muted-foreground">For the full report and emergency options, paste the message on the dashboard.</p>
         </section>
       )}
