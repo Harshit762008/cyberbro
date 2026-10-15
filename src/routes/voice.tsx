@@ -79,6 +79,11 @@ function VoicePage() {
 
   useEffect(() => {
     setSupported(getRecognitionCtor() !== null);
+    // Pre-load speech synthesis voices — Chrome loads them asynchronously,
+    // and speaking before they are ready can silently fail.
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.getVoices();
+    }
     return () => recRef.current?.stop();
   }, []);
 
