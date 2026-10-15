@@ -98,7 +98,7 @@ function VoicePage() {
     >
       <div className="flex items-start gap-2 rounded-2xl border border-warning/40 bg-warning/15 p-4 text-sm text-foreground">
         <Info className="mt-0.5 h-4 w-4 shrink-0" />
-        <p>Uses your browser's built-in speech recognition (works best in Chrome or Edge). Some browsers send audio to their own speech service. The safety check is demo mode (rule-based, not AI).</p>
+        <p>Uses your browser's built-in speech recognition (works best in Chrome or Edge). If the microphone doesn't start inside the editor preview, open the page in a new browser tab and allow microphone access. The result is also read out loud. The safety check is demo mode (rule-based, not AI).</p>
       </div>
 
       <section className={cardClass}>
@@ -142,7 +142,23 @@ function VoicePage() {
           placeholder="Your words will appear here — you can also type or edit."
           className="mt-4 w-full resize-y rounded-xl border border-input bg-background p-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
-        <button type="button" onClick={() => setResult(analyzeMessage(text))} disabled={text.trim().length < 5} className={`${primaryBtn} mt-3`}>
+        <button
+          type="button"
+          onClick={() => {
+            const r = analyzeMessage(text);
+            setResult(r);
+            if (typeof window !== "undefined" && "speechSynthesis" in window) {
+              window.speechSynthesis.cancel();
+              const u = new SpeechSynthesisUtterance(
+                `${LEVEL_TEXT[r.level]}. Danger score ${r.score.toFixed(1)} out of 10. ${r.reasons[0] ?? ""} ${r.tips[0] ?? ""}`,
+              );
+              u.lang = "en-IN";
+              window.speechSynthesis.speak(u);
+            }
+          }}
+          disabled={text.trim().length < 5}
+          className={`${primaryBtn} mt-3`}
+        >
           <Sparkles className="h-4 w-4" /> Analyze
         </button>
       </section>
