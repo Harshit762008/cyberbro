@@ -98,7 +98,7 @@ function VoicePage() {
     >
       <div className="flex items-start gap-2 rounded-2xl border border-warning/40 bg-warning/15 p-4 text-sm text-foreground">
         <Info className="mt-0.5 h-4 w-4 shrink-0" />
-        <p>Uses your browser's built-in speech recognition (works best in Chrome or Edge). Some browsers send audio to their own speech service. The safety check is demo mode (rule-based, not AI).</p>
+        <p>Uses your browser's built-in speech recognition (works best in Chrome or Edge). If the microphone doesn't start inside the editor preview, open the page in a new browser tab and allow microphone access. The result is also read out loud. The safety check is demo mode (rule-based, not AI).</p>
       </div>
 
       <section className={cardClass}>
