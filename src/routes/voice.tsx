@@ -1,6 +1,8 @@
+// ============= Full file contents =============
+
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Info, Mic, MicOff, Sparkles, Volume2, X } from "lucide-react";
+import { Check, Info, Mic, MicOff, Sparkles, Volume2, X } from "lucide-react";
 
 import { PageShell, cardClass, primaryBtn, secondaryBtn } from "@/components/AppHeader";
 import { analyzeMessage, type Analysis } from "@/lib/analyze-message";
@@ -39,6 +41,12 @@ function getRecognitionCtor(): (new () => Recognition) | null {
 
 const LEVEL_TEXT = { safe: "Low risk", warning: "Be careful", danger: "Very dangerous!" } as const;
 
+// Short sample sentence used by the audio check.
+const SAMPLE_TEXT = "This is a voice test. If you can hear me, your device is ready to read out safety results.";
+// Some browsers never report that playback finished, so stop showing
+// "playing" once the sample should be over.
+const SAMPLE_MS = 6000;
+
 function pickVoice(): SpeechSynthesisVoice | null {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return null;
   const voices = window.speechSynthesis.getVoices();
@@ -50,12 +58,11 @@ function pickVoice(): SpeechSynthesisVoice | null {
   );
 }
 
-function speakResult(r: Analysis) {
+// Speaks text out loud. Returns false when this browser cannot play speech.
+function speakText(text: string, onEnd?: () => void): boolean {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
   window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(
-    `${LEVEL_TEXT[r.level]}. Danger score ${r.score.toFixed(1)} out of 10. ${r.reasons[0] ?? ""} ${r.tips[0] ?? ""}`,
-  );
+  const u = new SpeechSynthesisUtterance(text);
   const voice = pickVoice();
   if (voice) {
     u.voice = voice;
@@ -65,9 +72,19 @@ function speakResult(r: Analysis) {
   }
   u.rate = 1;
   u.volume = 1;
+  if (onEnd) {
+    u.onend = onEnd;
+    u.onerror = onEnd;
+  }
   window.speechSynthesis.speak(u);
   return true;
 }
+
+function speakResult(r: Analysis) {
+  return speakText(`${LEVEL_TEXT[r.level]}. Danger score ${r.score.toFixed(1)} out of 10. ${r.reasons[0] ?? ""} ${r.tips[0] ?? ""}`);
+}
+
+type AudioTest = "idle" | "playing" | "finished" | "unsupported";
 
 function VoicePage() {
   const [supported, setSupported] = useState<boolean | null>(null);
@@ -75,17 +92,43 @@ function VoicePage() {
   const [text, setText] = useState("");
   const [error, setError] = useState("");
   const [result, setResult] = useState<Analysis | null>(null);
+  const [audioTest, setAudioTest] = useState<AudioTest>("idle");
+  const [heard, setHeard] = useState<boolean | null>(null);
+  const [hasVoices, setHasVoices] = useState<boolean | null>(null);
   const recRef = useRef<Recognition | null>(null);
+  const sampleTimer = useRef<number | null>(null);
 
   useEffect(() => {
     setSupported(getRecognitionCtor() !== null);
     // Pre-load speech synthesis voices — Chrome loads them asynchronously,
     // and speaking before they are ready can silently fail.
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.getVoices();
+      const loadVoices = () => setHasVoices(window.speechSynthesis.getVoices().length > 0);
+      loadVoices();
+      window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
+      return () => {
+        window.speechSynthesis.removeEventListener("voiceschanged", loadVoices);
+        window.speechSynthesis.cancel();
+        if (sampleTimer.current !== null) window.clearTimeout(sampleTimer.current);
+        recRef.current?.stop();
+      };
     }
+    setHasVoices(false);
     return () => recRef.current?.stop();
   }, []);
+
+  const runAudioTest = () => {
+    setError("");
+    setHeard(null);
+    const started = speakText(SAMPLE_TEXT, () => setAudioTest("finished"));
+    if (!started) {
+      setAudioTest("unsupported");
+      return;
+    }
+    setAudioTest("playing");
+    if (sampleTimer.current !== null) window.clearTimeout(sampleTimer.current);
+    sampleTimer.current = window.setTimeout(() => setAudioTest("finished"), SAMPLE_MS);
+  };
 
   const start = () => {
     const Ctor = getRecognitionCtor();
@@ -135,6 +178,60 @@ function VoicePage() {
         <Info className="mt-0.5 h-4 w-4 shrink-0" />
         <p>Uses your browser's built-in speech recognition (works best in Chrome or Edge). If the microphone doesn't start inside the editor preview, open the page in a new browser tab and allow microphone access. The result is also read out loud. The safety check is demo mode (rule-based, not AI).</p>
       </div>
+
+      <section className={cardClass} aria-live="polite">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-foreground">Check your audio first</p>
+            <p className="text-xs text-muted-foreground">Play a short sample voice to make sure your device can read results out loud.</p>
+          </div>
+          <button type="button" onClick={runAudioTest} disabled={audioTest === "playing"} className={`${secondaryBtn} shrink-0`}>
+            <Volume2 className="h-4 w-4" /> {audioTest === "playing" ? "Playing sample…" : "Test audio"}
+          </button>
+        </div>
+
+        {audioTest === "playing" && (
+          <p className="mt-3 animate-pulse text-sm text-primary">Playing a short sample… turn your volume up.</p>
+        )}
+
+        {audioTest === "unsupported" && (
+          <p role="alert" className="mt-3 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">
+            This browser can't play speech. Try Chrome or Edge, or update your browser.
+          </p>
+        )}
+
+        {audioTest === "finished" && (
+          <div className="mt-3 space-y-2">
+            {heard === null ? (
+              <>
+                <p className="text-sm text-foreground">Did you hear the sample voice?</p>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <button type="button" onClick={() => setHeard(true)} className={primaryBtn}>
+                    <Check className="h-4 w-4" /> Yes, I heard it
+                  </button>
+                  <button type="button" onClick={() => setHeard(false)} className={secondaryBtn}>
+                    <X className="h-4 w-4" /> No, I didn't
+                  </button>
+                </div>
+              </>
+            ) : heard ? (
+              <p className="rounded-lg bg-safe/15 px-3 py-2 text-sm text-foreground">
+                Great — your device can play speech. Results will be read out after you tap Analyze.
+              </p>
+            ) : (
+              <div className="rounded-lg bg-warning/15 px-3 py-2 text-sm text-foreground">
+                <p className="font-medium">No audio heard. Try these:</p>
+                <ul className="mt-1 list-disc space-y-1 pl-5">
+                  <li>Turn the volume up and make sure the device isn't on silent.</li>
+                  <li>Use Chrome or Edge — some browsers have no voice built in.</li>
+                  {hasVoices === false && <li>This browser has no speech voices installed. On Android, add a language or voice pack in the system settings.</li>}
+                  <li>Then tap Test audio again.</li>
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
 
       <section className={cardClass}>
         {supported === false && (
