@@ -39,6 +39,36 @@ function getRecognitionCtor(): (new () => Recognition) | null {
 
 const LEVEL_TEXT = { safe: "Low risk", warning: "Be careful", danger: "Very dangerous!" } as const;
 
+function pickVoice(): SpeechSynthesisVoice | null {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return null;
+  const voices = window.speechSynthesis.getVoices();
+  return (
+    voices.find((v) => v.lang.toLowerCase().startsWith("en-in")) ??
+    voices.find((v) => v.lang.toLowerCase().startsWith("en")) ??
+    voices[0] ??
+    null
+  );
+}
+
+function speakResult(r: Analysis) {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(
+    `${LEVEL_TEXT[r.level]}. Danger score ${r.score.toFixed(1)} out of 10. ${r.reasons[0] ?? ""} ${r.tips[0] ?? ""}`,
+  );
+  const voice = pickVoice();
+  if (voice) {
+    u.voice = voice;
+    u.lang = voice.lang;
+  } else {
+    u.lang = "en-IN";
+  }
+  u.rate = 1;
+  u.volume = 1;
+  window.speechSynthesis.speak(u);
+  return true;
+}
+
 function VoicePage() {
   const [supported, setSupported] = useState<boolean | null>(null);
   const [listening, setListening] = useState(false);
