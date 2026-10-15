@@ -182,13 +182,8 @@ function VoicePage() {
           onClick={() => {
             const r = analyzeMessage(text);
             setResult(r);
-            if (typeof window !== "undefined" && "speechSynthesis" in window) {
-              window.speechSynthesis.cancel();
-              const u = new SpeechSynthesisUtterance(
-                `${LEVEL_TEXT[r.level]}. Danger score ${r.score.toFixed(1)} out of 10. ${r.reasons[0] ?? ""} ${r.tips[0] ?? ""}`,
-              );
-              u.lang = "en-IN";
-              window.speechSynthesis.speak(u);
+            if (!speakResult(r)) {
+              setError("Audio playback is not supported in this browser.");
             }
           }}
           disabled={text.trim().length < 5}
