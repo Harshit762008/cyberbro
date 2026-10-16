@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { CheckCircle2, Eye, EyeOff, Lock, X, XCircle, AlertTriangle } from "lucide-react";
+import { Check, CheckCircle2, Copy, Eye, EyeOff, Lock, RefreshCw, Wand2, X, XCircle, AlertTriangle } from "lucide-react";
 
 import { PageShell, cardClass, secondaryBtn } from "@/components/AppHeader";
-import { checkPassword } from "@/lib/password-strength";
+import { checkPassword, suggestPasswords } from "@/lib/password-strength";
 
 export const Route = createFileRoute("/password-check")({
   head: () => ({
@@ -24,7 +24,23 @@ const BAR = ["bg-danger", "bg-danger", "bg-warning", "bg-safe", "bg-safe"];
 function PasswordPage() {
   const [pw, setPw] = useState("");
   const [show, setShow] = useState(false);
+  const [suggestions, setSuggestions] = useState<{ label: string; value: string }[]>([]);
+  const [copied, setCopied] = useState<string | null>(null);
   const report = useMemo(() => (pw ? checkPassword(pw) : null), [pw]);
+
+  const regenerate = () => {
+    setSuggestions(suggestPasswords());
+    setCopied(null);
+  };
+
+  const copySuggestion = async (value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(value);
+    } catch {
+      setCopied(null);
+    }
+  };
 
   return (
     <PageShell
@@ -93,6 +109,50 @@ function PasswordPage() {
                 </li>
               ))}
             </ul>
+          )}
+          {report.score <= 2 && (
+            <div className="space-y-3 rounded-xl border border-danger/40 bg-danger/10 p-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Wand2 className="h-4 w-4 text-danger" />
+                  This password is easy to crack — use a strong one instead
+                </p>
+                <button type="button" onClick={regenerate} className={`${secondaryBtn} shrink-0`}>
+                  <RefreshCw className="h-4 w-4" /> {suggestions.length > 0 ? "New suggestions" : "Suggest strong passwords"}
+                </button>
+              </div>
+              {suggestions.length > 0 && (
+                <ul className="space-y-2">
+                  {suggestions.map((s) => (
+                    <li key={s.value} className="flex flex-col gap-2 rounded-lg bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">{s.label}</p>
+                        <p className="break-all font-mono text-sm font-semibold text-foreground">{s.value}</p>
+                      </div>
+                      <div className="flex shrink-0 gap-2">
+                        <button type="button" onClick={() => copySuggestion(s.value)} className={secondaryBtn}>
+                          {copied === s.value ? <Check className="h-4 w-4 text-safe" /> : <Copy className="h-4 w-4" />}
+                          {copied === s.value ? "Copied" : "Copy"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPw(s.value);
+                            setShow(true);
+                          }}
+                          className={secondaryBtn}
+                        >
+                          <Wand2 className="h-4 w-4" /> Use this
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Suggestions are generated on your device and never sent anywhere. Save the one you pick in a password manager.
+              </p>
+            </div>
           )}
           <p className="text-xs text-muted-foreground">
             Tip: a long phrase of 4+ random words (like "mango-river-blue-lamp") is strong and easy to remember. Use a different password for every account.

@@ -41,34 +41,54 @@ function getRecognitionCtor(): (new () => Recognition) | null {
 
 const LEVEL_TEXT = { safe: "Low risk", warning: "Be careful", danger: "Very dangerous!" } as const;
 
+// Spoken replies, in English and Hindi. The reply language follows the
+// language of the message the user spoke or typed.
+const SPEECH = {
+  en: {
+    level: { safe: "Low risk", warning: "Be careful", danger: "Very dangerous!" },
+    score: (s: string) => `Danger score ${s} out of 10.`,
+  },
+  hi: {
+    level: { safe: "कम खतरा", warning: "सावधान रहें", danger: "बहुत खतरनाक!" },
+    score: (s: string) => `खतरे का स्कोर 10 में से ${s} है।`,
+  },
+} as const;
+
+type SpeechLang = keyof typeof SPEECH;
+
+// Hindi messages arrive in Devanagari script from speech recognition.
+function detectLang(text: string): SpeechLang {
+  return /[\u0900-\u097F]/.test(text) ? "hi" : "en";
+}
+
 // Short sample sentence used by the audio check.
 const SAMPLE_TEXT = "This is a voice test. If you can hear me, your device is ready to read out safety results.";
 // Some browsers never report that playback finished, so stop showing
 // "playing" once the sample should be over.
 const SAMPLE_MS = 6000;
 
-function pickVoice(): SpeechSynthesisVoice | null {
+function pickVoice(lang: SpeechLang): SpeechSynthesisVoice | null {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return null;
   const voices = window.speechSynthesis.getVoices();
-  return (
-    voices.find((v) => v.lang.toLowerCase().startsWith("en-in")) ??
-    voices.find((v) => v.lang.toLowerCase().startsWith("en")) ??
-    voices[0] ??
-    null
-  );
+  const wanted = lang === "hi" ? ["hi-in", "hi"] : ["en-in", "en"];
+  for (const prefix of wanted) {
+    const match = voices.find((v) => v.lang.toLowerCase().startsWith(prefix));
+    if (match) return match;
+  }
+  return voices[0] ?? null;
 }
 
 // Speaks text out loud. Returns false when this browser cannot play speech.
-function speakText(text: string, onEnd?: () => void): boolean {
+function speakText(text: string, lang: SpeechLang = "en", onEnd?: () => void): boolean {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  const voice = pickVoice();
+  const voice = pickVoice(lang);
   if (voice) {
     u.voice = voice;
     u.lang = voice.lang;
   } else {
-    u.lang = "en-IN";
+    u.lang = lang === "hi" ? "hi-IN" : "en-IN";
   }
   u.rate = 1;
   u.volume = 1;
@@ -80,8 +100,14 @@ function speakText(text: string, onEnd?: () => void): boolean {
   return true;
 }
 
-function speakResult(r: Analysis) {
-  return speakText(`${LEVEL_TEXT[r.level]}. Danger score ${r.score.toFixed(1)} out of 10. ${r.reasons[0] ?? ""} ${r.tips[0] ?? ""}`);
+// Reads the result out loud in the same language the user spoke or typed.
+function speakResult(r: Analysis, lang: SpeechLang) {
+  const t = SPEECH[lang];
+  const detail =
+    lang === "hi"
+      ? "कृपया इस मैसेज के किसी भी लिंक पर क्लिक न करें और अपना OTP या पासवर्ड किसी को न दें।"
+      : `${r.reasons[0] ?? ""} ${r.tips[0] ?? ""}`;
+  return speakText(`${t.level[r.level]}. ${t.score(r.score.toFixed(1))} ${detail}`, lang);
 }
 
 type AudioTest = "idle" | "playing" | "finished" | "unsupported";
@@ -120,7 +146,7 @@ function VoicePage() {
   const runAudioTest = () => {
     setError("");
     setHeard(null);
-    const started = speakText(SAMPLE_TEXT, () => setAudioTest("finished"));
+    const started = speakText(SAMPLE_TEXT, "en", () => setAudioTest("finished"));
     if (!started) {
       setAudioTest("unsupported");
       return;
@@ -136,7 +162,9 @@ function VoicePage() {
     setError("");
     setResult(null);
     const rec = new Ctor();
-    rec.lang = "en-IN";
+    // hi-IN recognition also transcribes English speech well enough for
+    // short messages, and lets Hindi speakers be understood.
+    rec.lang = "hi-IN";
     rec.interimResults = true;
     rec.continuous = false;
     rec.onresult = (e) => {
@@ -279,7 +307,7 @@ function VoicePage() {
           onClick={() => {
             const r = analyzeMessage(text);
             setResult(r);
-            if (!speakResult(r)) {
+            if (!speakResult(r, detectLang(text))) {
               setError("Audio playback is not supported in this browser.");
             }
           }}
@@ -302,7 +330,7 @@ function VoicePage() {
           <ul className="list-disc space-y-1 pl-5 text-sm text-foreground">
             {result.reasons.map((r) => <li key={r}>{r}</li>)}
           </ul>
-          <button type="button" onClick={() => speakResult(result)} className={secondaryBtn}>
+          <button type="button" onClick={() => speakResult(result, detectLang(text))} className={secondaryBtn}>
             <Volume2 className="h-4 w-4" /> Listen again
           </button>
           <p className="text-xs text-muted-foreground">For the full report and emergency options, paste the message on the dashboard.</p>
