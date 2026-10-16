@@ -29,7 +29,7 @@ function PasswordPage() {
   const report = useMemo(() => (pw ? checkPassword(pw) : null), [pw]);
 
   const regenerate = () => {
-    setSuggestions(suggestPasswords());
+    setSuggestions(suggestPasswords(pw));
     setCopied(null);
   };
 
@@ -115,10 +115,10 @@ function PasswordPage() {
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
                   <Wand2 className="h-4 w-4 text-danger" />
-                  This password is easy to crack — use a strong one instead
+                  This password is easy to crack — make it strong
                 </p>
                 <button type="button" onClick={regenerate} className={`${secondaryBtn} shrink-0`}>
-                  <RefreshCw className="h-4 w-4" /> {suggestions.length > 0 ? "New suggestions" : "Suggest strong passwords"}
+                  <RefreshCw className="h-4 w-4" /> {suggestions.length > 0 ? "New suggestions" : "Make my password strong"}
                 </button>
               </div>
               {suggestions.length > 0 && (
@@ -150,7 +150,7 @@ function PasswordPage() {
                 </ul>
               )}
               <p className="text-xs text-muted-foreground">
-                Suggestions are generated on your device and never sent anywhere. Save the one you pick in a password manager.
+                These keep your own letters and numbers, and add capitals, symbols and extra characters. They're made on your device and never sent anywhere. Save the one you pick in a password manager.
               </p>
             </div>
           )}
