@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { CheckCircle2, Eye, EyeOff, Lock, X, XCircle, AlertTriangle } from "lucide-react";
+import { Check, CheckCircle2, Copy, Eye, EyeOff, Lock, RefreshCw, Wand2, X, XCircle, AlertTriangle } from "lucide-react";
 
 import { PageShell, cardClass, secondaryBtn } from "@/components/AppHeader";
-import { checkPassword } from "@/lib/password-strength";
+import { checkPassword, suggestPasswords } from "@/lib/password-strength";
 
 export const Route = createFileRoute("/password-check")({
   head: () => ({
