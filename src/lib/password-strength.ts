@@ -136,6 +136,10 @@ function pick<T>(arr: readonly T[]): T {
   return arr[randInt(arr.length)]!;
 }
 
+function pickChar(s: string): string {
+  return s[randInt(s.length)]!;
+}
+
 function capitalize(w: string): string {
   return w.charAt(0).toUpperCase() + w.slice(1);
 }
