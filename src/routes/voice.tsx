@@ -2,7 +2,7 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Check, Info, Mic, MicOff, Sparkles, Volume2, X } from "lucide-react";
+import { Check, ExternalLink, Info, Mic, MicOff, Sparkles, Volume2, X } from "lucide-react";
 
 import { PageShell, cardClass, primaryBtn, secondaryBtn } from "@/components/AppHeader";
 import { analyzeMessage, type Analysis } from "@/lib/analyze-message";
@@ -114,6 +114,8 @@ type AudioTest = "idle" | "playing" | "finished" | "unsupported";
 
 function VoicePage() {
   const [supported, setSupported] = useState<boolean | null>(null);
+  const [inFrame, setInFrame] = useState(false);
+  const [starting, setStarting] = useState(false);
   const [listening, setListening] = useState(false);
   const [text, setText] = useState("");
   const [error, setError] = useState("");
@@ -126,6 +128,11 @@ function VoicePage() {
 
   useEffect(() => {
     setSupported(getRecognitionCtor() !== null);
+    try {
+      setInFrame(window.self !== window.top);
+    } catch {
+      setInFrame(true);
+    }
     // Pre-load speech synthesis voices — Chrome loads them asynchronously,
     // and speaking before they are ready can silently fail.
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
@@ -156,11 +163,43 @@ function VoicePage() {
     sampleTimer.current = window.setTimeout(() => setAudioTest("finished"), SAMPLE_MS);
   };
 
-  const start = () => {
+  // Ask for microphone permission explicitly so the browser shows its
+  // prompt; some browsers never prompt from speech recognition alone.
+  const requestMic = async (): Promise<string | null> => {
+    if (!navigator.mediaDevices?.getUserMedia) return null;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((t) => t.stop());
+      return null;
+    } catch (err) {
+      const name = (err as { name?: string })?.name ?? "";
+      if (name === "NotAllowedError" || name === "SecurityError") {
+        return inFrame
+          ? "The microphone is blocked inside this preview window. Tap \"Open in new tab\" below, then allow microphone access."
+          : "Microphone permission was denied. Tap the lock icon next to the web address, allow Microphone, then try again.";
+      }
+      if (name === "NotFoundError") return "No microphone was found on this device.";
+      if (name === "NotReadableError") return "Your microphone is being used by another app. Close it and try again.";
+      return "Could not start the microphone. Please try again.";
+    }
+  };
+
+  const start = async () => {
     const Ctor = getRecognitionCtor();
-    if (!Ctor) return;
+    if (!Ctor) {
+      setError("Voice input is not supported in this browser. Please use Chrome or Edge.");
+      return;
+    }
     setError("");
     setResult(null);
+    setStarting(true);
+    const micError = await requestMic();
+    setStarting(false);
+    if (micError) {
+      setError(micError);
+      return;
+    }
+    window.speechSynthesis?.cancel();
     const rec = new Ctor();
     // hi-IN recognition also transcribes English speech well enough for
     // short messages, and lets Hindi speakers be understood.
@@ -178,11 +217,19 @@ function VoicePage() {
     };
     rec.onerror = (e) => {
       setError(
-        e.error === "not-allowed"
-          ? "Microphone permission was denied. Allow microphone access in your browser and try again."
+        e.error === "not-allowed" || e.error === "service-not-allowed"
+          ? inFrame
+            ? "The microphone is blocked inside this preview window. Tap \"Open in new tab\" below, then allow microphone access."
+            : "Microphone permission was denied. Allow microphone access in your browser and try again."
           : e.error === "no-speech"
             ? "No speech heard. Please try again and speak clearly."
-            : `Voice input stopped (${e.error}). Please try again.`,
+            : e.error === "audio-capture"
+              ? "No microphone was found. Check that your mic is connected."
+              : e.error === "network"
+                ? "Voice input needs an internet connection (Chrome sends speech to Google to turn it into text). Check your connection, or use Chrome/Edge."
+                : e.error === "aborted"
+                  ? ""
+                  : `Voice input stopped (${e.error}). Please try again.`,
       );
     };
     rec.onend = () => setListening(false);
@@ -273,8 +320,8 @@ function VoicePage() {
               <MicOff className="h-4 w-4" /> Stop listening
             </button>
           ) : (
-            <button type="button" onClick={start} disabled={!supported} className={primaryBtn}>
-              <Mic className="h-4 w-4" /> Start speaking
+            <button type="button" onClick={() => void start()} disabled={supported === false || starting} className={primaryBtn}>
+              <Mic className="h-4 w-4" /> {starting ? "Asking for microphone…" : "Start speaking"}
             </button>
           )}
           <button
@@ -291,6 +338,15 @@ function VoicePage() {
           </button>
         </div>
         {listening && <p className="mt-2 animate-pulse text-sm text-primary">Listening… speak now</p>}
+        {inFrame && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            The editor preview can block the microphone.{" "}
+            <a href="/voice" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-semibold text-primary underline">
+              <ExternalLink className="h-3 w-3" /> Open in new tab
+            </a>{" "}
+            to use voice input.
+          </p>
+        )}
         {error && <p role="alert" className="mt-2 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>}
 
         <textarea
