@@ -100,8 +100,14 @@ function speakText(text: string, lang: SpeechLang = "en", onEnd?: () => void): b
   return true;
 }
 
-function speakResult(r: Analysis) {
-  return speakText(`${LEVEL_TEXT[r.level]}. Danger score ${r.score.toFixed(1)} out of 10. ${r.reasons[0] ?? ""} ${r.tips[0] ?? ""}`);
+// Reads the result out loud in the same language the user spoke or typed.
+function speakResult(r: Analysis, lang: SpeechLang) {
+  const t = SPEECH[lang];
+  const detail =
+    lang === "hi"
+      ? "कृपया इस मैसेज के किसी भी लिंक पर क्लिक न करें और अपना OTP या पासवर्ड किसी को न दें।"
+      : `${r.reasons[0] ?? ""} ${r.tips[0] ?? ""}`;
+  return speakText(`${t.level[r.level]}. ${t.score(r.score.toFixed(1))} ${detail}`, lang);
 }
 
 type AudioTest = "idle" | "playing" | "finished" | "unsupported";
