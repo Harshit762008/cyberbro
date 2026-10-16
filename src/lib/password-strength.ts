@@ -115,7 +115,6 @@ export function checkPassword(pw: string): PasswordReport {
 }
 
 // Strong password suggestions, generated locally with crypto randomness.
-// Nothing is derived from the user's own password.
 
 const WORDS = [
   "mango", "river", "tiger", "cloud", "lamp", "monsoon", "cricket", "banyan",
@@ -164,10 +163,60 @@ function makeRandomPassword(): string {
     .join("");
 }
 
-export function suggestPasswords(): { label: string; value: string }[] {
+// Strengthens the user's OWN password: keeps their letters and numbers in
+// order, mixes upper/lower case, swaps some letters for look-alike symbols,
+// breaks easy sequences with symbols and adds random characters until it is
+// at least "Strong". Runs locally; nothing is sent anywhere.
+const LEET: Record<string, string> = { a: "@", s: "$", o: "0", i: "!", e: "3", l: "1", t: "7" };
+
+type Style = { leet: number; sepEvery: number; minLen: number };
+
+function strengthenOnce(pw: string, style: Style): string {
+  const base = pw.replace(/\s+/g, "");
+  let out = "";
+  let sinceSep = 0;
+  for (const ch of base) {
+    let c = ch;
+    const lower = ch.toLowerCase();
+    if (/[a-z]/i.test(ch)) {
+      if (LEET[lower] && randInt(100) < style.leet) c = LEET[lower]!;
+      else c = randInt(2) === 0 ? ch.toUpperCase() : ch.toLowerCase();
+    }
+    out += c;
+    sinceSep++;
+    if (sinceSep >= style.sepEvery) {
+      out += pickChar(SYMBOLS);
+      sinceSep = 0;
+    }
+  }
+  if (out.length > 0 && SYMBOLS.includes(out[out.length - 1]!)) out = out.slice(0, -1);
+  if (!/[A-Z]/.test(out)) out = "ABCDEFGHJKLMNPQRSTUVWXYZ"[randInt(24)] + out;
+  if (!/[a-z]/.test(out)) out += pickChar("abcdefghijkmnopqrstuvwxyz");
+  if (!/\d/.test(out)) out += pickChar(DIGITS);
+  if (!/[^A-Za-z0-9]/.test(out)) out += pickChar(SYMBOLS);
+  const all = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ" + DIGITS + SYMBOLS;
+  while (out.length < style.minLen) out += pickChar(all);
+  return out;
+}
+
+export function strengthenPassword(pw: string, style: Style = { leet: 40, sepEvery: 3, minLen: 14 }): string {
+  let candidate = strengthenOnce(pw, style);
+  for (let i = 0; i < 20 && checkPassword(candidate).score < 3; i++) {
+    candidate = strengthenOnce(pw, { ...style, minLen: style.minLen + 2 + i });
+  }
+  return candidate;
+}
+
+export function suggestPasswords(pw = ""): { label: string; value: string }[] {
+  if (pw.trim().length > 0) {
+    return [
+      { label: "Your password, made strong", value: strengthenPassword(pw, { leet: 30, sepEvery: 4, minLen: 14 }) },
+      { label: "Your password with symbols mixed in", value: strengthenPassword(pw, { leet: 60, sepEvery: 2, minLen: 14 }) },
+      { label: "Your password, extra long", value: strengthenPassword(pw, { leet: 40, sepEvery: 3, minLen: 18 }) },
+    ];
+  }
   return [
     { label: "Easy to remember", value: makePassphrase() },
-    { label: "Easy to remember", value: capitalize(pick(WORDS)) + capitalize(pick(WORDS)) + pickChar(DIGITS) + pickChar(DIGITS) + pickChar(SYMBOLS) },
     { label: "Maximum strength", value: makeRandomPassword() },
   ];
 }
