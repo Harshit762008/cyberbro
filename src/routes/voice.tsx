@@ -41,6 +41,26 @@ function getRecognitionCtor(): (new () => Recognition) | null {
 
 const LEVEL_TEXT = { safe: "Low risk", warning: "Be careful", danger: "Very dangerous!" } as const;
 
+// Spoken replies, in English and Hindi. The reply language follows the
+// language of the message the user spoke or typed.
+const SPEECH = {
+  en: {
+    level: { safe: "Low risk", warning: "Be careful", danger: "Very dangerous!" },
+    score: (s: string) => `Danger score ${s} out of 10.`,
+  },
+  hi: {
+    level: { safe: "कम खतरा", warning: "सावधान रहें", danger: "बहुत खतरनाक!" },
+    score: (s: string) => `खतरे का स्कोर 10 में से ${s} है।`,
+  },
+} as const;
+
+type SpeechLang = keyof typeof SPEECH;
+
+// Hindi messages arrive in Devanagari script from speech recognition.
+function detectLang(text: string): SpeechLang {
+  return /[\u0900-\u097F]/.test(text) ? "hi" : "en";
+}
+
 // Short sample sentence used by the audio check.
 const SAMPLE_TEXT = "This is a voice test. If you can hear me, your device is ready to read out safety results.";
 // Some browsers never report that playback finished, so stop showing

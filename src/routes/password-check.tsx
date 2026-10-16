@@ -24,7 +24,23 @@ const BAR = ["bg-danger", "bg-danger", "bg-warning", "bg-safe", "bg-safe"];
 function PasswordPage() {
   const [pw, setPw] = useState("");
   const [show, setShow] = useState(false);
+  const [suggestions, setSuggestions] = useState<{ label: string; value: string }[]>([]);
+  const [copied, setCopied] = useState<string | null>(null);
   const report = useMemo(() => (pw ? checkPassword(pw) : null), [pw]);
+
+  const regenerate = () => {
+    setSuggestions(suggestPasswords());
+    setCopied(null);
+  };
+
+  const copySuggestion = async (value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(value);
+    } catch {
+      setCopied(null);
+    }
+  };
 
   return (
     <PageShell
