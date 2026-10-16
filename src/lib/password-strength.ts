@@ -148,7 +148,7 @@ function capitalize(w: string): string {
 function makePassphrase(): string {
   const words = [pick(WORDS), pick(WORDS), pick(WORDS), pick(WORDS)];
   const sep = pick(["-", "-", "_", "."]);
-  return `${words.join(sep)}${sep}${pick(DIGITS)}${pick(DIGITS)}${pick(SYMBOLS)}`;
+  return `${words.join(sep)}${sep}${pickChar(DIGITS)}${pickChar(DIGITS)}${pickChar(SYMBOLS)}`;
 }
 
 // A random 16-character password mixing all character classes.
@@ -156,8 +156,8 @@ function makeRandomPassword(): string {
   const lower = "abcdefghijkmnopqrstuvwxyz";
   const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
   const all = lower + upper + DIGITS + SYMBOLS;
-  let pw = pick(lower) + pick(upper) + pick(DIGITS) + pick(SYMBOLS);
-  while (pw.length < 16) pw += pick(all);
+  let pw = pickChar(lower) + pickChar(upper) + pickChar(DIGITS) + pickChar(SYMBOLS);
+  while (pw.length < 16) pw += pickChar(all);
   return pw
     .split("")
     .sort(() => randInt(3) - 1)
@@ -167,7 +167,7 @@ function makeRandomPassword(): string {
 export function suggestPasswords(): { label: string; value: string }[] {
   return [
     { label: "Easy to remember", value: makePassphrase() },
-    { label: "Easy to remember", value: capitalize(pick(WORDS)) + capitalize(pick(WORDS)) + pick(DIGITS) + pick(DIGITS) + pick(SYMBOLS) },
+    { label: "Easy to remember", value: capitalize(pick(WORDS)) + capitalize(pick(WORDS)) + pickChar(DIGITS) + pickChar(DIGITS) + pickChar(SYMBOLS) },
     { label: "Maximum strength", value: makeRandomPassword() },
   ];
 }
