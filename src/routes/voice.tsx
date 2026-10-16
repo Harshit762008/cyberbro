@@ -146,7 +146,7 @@ function VoicePage() {
   const runAudioTest = () => {
     setError("");
     setHeard(null);
-    const started = speakText(SAMPLE_TEXT, () => setAudioTest("finished"));
+    const started = speakText(SAMPLE_TEXT, "en", () => setAudioTest("finished"));
     if (!started) {
       setAudioTest("unsupported");
       return;
@@ -162,7 +162,9 @@ function VoicePage() {
     setError("");
     setResult(null);
     const rec = new Ctor();
-    rec.lang = "en-IN";
+    // hi-IN recognition also transcribes English speech well enough for
+    // short messages, and lets Hindi speakers be understood.
+    rec.lang = "hi-IN";
     rec.interimResults = true;
     rec.continuous = false;
     rec.onresult = (e) => {
@@ -305,7 +307,7 @@ function VoicePage() {
           onClick={() => {
             const r = analyzeMessage(text);
             setResult(r);
-            if (!speakResult(r)) {
+            if (!speakResult(r, detectLang(text))) {
               setError("Audio playback is not supported in this browser.");
             }
           }}
@@ -328,7 +330,7 @@ function VoicePage() {
           <ul className="list-disc space-y-1 pl-5 text-sm text-foreground">
             {result.reasons.map((r) => <li key={r}>{r}</li>)}
           </ul>
-          <button type="button" onClick={() => speakResult(result)} className={secondaryBtn}>
+          <button type="button" onClick={() => speakResult(result, detectLang(text))} className={secondaryBtn}>
             <Volume2 className="h-4 w-4" /> Listen again
           </button>
           <p className="text-xs text-muted-foreground">For the full report and emergency options, paste the message on the dashboard.</p>
