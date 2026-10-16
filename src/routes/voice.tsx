@@ -67,28 +67,28 @@ const SAMPLE_TEXT = "This is a voice test. If you can hear me, your device is re
 // "playing" once the sample should be over.
 const SAMPLE_MS = 6000;
 
-function pickVoice(): SpeechSynthesisVoice | null {
+function pickVoice(lang: SpeechLang): SpeechSynthesisVoice | null {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return null;
   const voices = window.speechSynthesis.getVoices();
-  return (
-    voices.find((v) => v.lang.toLowerCase().startsWith("en-in")) ??
-    voices.find((v) => v.lang.toLowerCase().startsWith("en")) ??
-    voices[0] ??
-    null
-  );
+  const wanted = lang === "hi" ? ["hi-in", "hi"] : ["en-in", "en"];
+  for (const prefix of wanted) {
+    const match = voices.find((v) => v.lang.toLowerCase().startsWith(prefix));
+    if (match) return match;
+  }
+  return voices[0] ?? null;
 }
 
 // Speaks text out loud. Returns false when this browser cannot play speech.
-function speakText(text: string, onEnd?: () => void): boolean {
+function speakText(text: string, lang: SpeechLang = "en", onEnd?: () => void): boolean {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  const voice = pickVoice();
+  const voice = pickVoice(lang);
   if (voice) {
     u.voice = voice;
     u.lang = voice.lang;
   } else {
-    u.lang = "en-IN";
+    u.lang = lang === "hi" ? "hi-IN" : "en-IN";
   }
   u.rate = 1;
   u.volume = 1;
