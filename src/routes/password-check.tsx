@@ -56,7 +56,7 @@ function PasswordPage() {
             id="pw"
             type={show ? "text" : "password"}
             value={pw}
-            onChange={(e) => setPw(e.target.value)}
+            onChange={(e) => { setPw(e.target.value); setSuggestions([]); }}
             autoComplete="off"
             spellCheck={false}
             maxLength={128}
