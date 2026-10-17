@@ -77,6 +77,7 @@ const TOOLS = [
   { to: "/password-check", icon: KeyRound, title: "Password Check", desc: "See if your password is strong" },
   { to: "/voice", icon: Mic, title: "Voice Assistant", desc: "Speak a message to check it" },
   { to: "/emergency", icon: PhoneCall, title: "Emergency Support", desc: "Get help right away" },
+  { to: "/device-guardian", icon: ShieldCheck, title: "Protect My Device", desc: "Review Android or Windows security" },
 ] as const;
 
 type Status = "idle" | "loading" | "done" | "error";
