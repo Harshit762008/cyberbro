@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DeviceGuardianRouteImport } from './routes/device-guardian'
 import { Route as EmergencyRouteImport } from './routes/emergency'
 import { Route as LinkCheckRouteImport } from './routes/link-check'
 import { Route as PasswordCheckRouteImport } from './routes/password-check'
@@ -19,6 +20,11 @@ import { Route as VoiceRouteImport } from './routes/voice'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeviceGuardianRoute = DeviceGuardianRouteImport.update({
+  id: '/device-guardian',
+  path: '/device-guardian',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmergencyRoute = EmergencyRouteImport.update({
@@ -49,6 +55,7 @@ const VoiceRoute = VoiceRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/device-guardian': typeof DeviceGuardianRoute
   '/emergency': typeof EmergencyRoute
   '/link-check': typeof LinkCheckRoute
   '/password-check': typeof PasswordCheckRoute
@@ -57,6 +64,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/device-guardian': typeof DeviceGuardianRoute
   '/emergency': typeof EmergencyRoute
   '/link-check': typeof LinkCheckRoute
   '/password-check': typeof PasswordCheckRoute
@@ -66,6 +74,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/device-guardian': typeof DeviceGuardianRoute
   '/emergency': typeof EmergencyRoute
   '/link-check': typeof LinkCheckRoute
   '/password-check': typeof PasswordCheckRoute
@@ -76,6 +85,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/device-guardian'
     | '/emergency'
     | '/link-check'
     | '/password-check'
@@ -84,6 +94,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/device-guardian'
     | '/emergency'
     | '/link-check'
     | '/password-check'
@@ -92,6 +103,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/device-guardian'
     | '/emergency'
     | '/link-check'
     | '/password-check'
@@ -101,6 +113,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DeviceGuardianRoute: typeof DeviceGuardianRoute
   EmergencyRoute: typeof EmergencyRoute
   LinkCheckRoute: typeof LinkCheckRoute
   PasswordCheckRoute: typeof PasswordCheckRoute
@@ -115,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/device-guardian': {
+      id: '/device-guardian'
+      path: '/device-guardian'
+      fullPath: '/device-guardian'
+      preLoaderRoute: typeof DeviceGuardianRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/emergency': {
@@ -157,6 +177,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DeviceGuardianRoute: DeviceGuardianRoute,
   EmergencyRoute: EmergencyRoute,
   LinkCheckRoute: LinkCheckRoute,
   PasswordCheckRoute: PasswordCheckRoute,
