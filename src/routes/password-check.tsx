@@ -67,7 +67,7 @@ function PasswordPage() {
             {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             <span className="hidden sm:inline">{show ? "Hide" : "Show"}</span>
           </button>
-          <button type="button" onClick={() => setPw("")} disabled={!pw} className={secondaryBtn} aria-label="Clear password">
+          <button type="button" onClick={() => { setPw(""); setSuggestions([]); setCopied(null); }} disabled={!pw} className={secondaryBtn} aria-label="Clear password">
             <X className="h-4 w-4" />
             <span className="hidden sm:inline">Clear</span>
           </button>
@@ -154,6 +154,9 @@ function PasswordPage() {
               </p>
             </div>
           )}
+          <p className="text-xs text-muted-foreground">
+            Strength is a local estimate, not proof of security. If your original password is exposed, choose an unrelated unique password instead of modifying it.
+          </p>
           <p className="text-xs text-muted-foreground">
             Tip: a long phrase of 4+ random words (like "mango-river-blue-lamp") is strong and easy to remember. Use a different password for every account.
           </p>
