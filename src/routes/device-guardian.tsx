@@ -1,134 +1,98 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { Smartphone, Monitor, ShieldCheck, ShieldAlert, ClipboardCheck, RotateCcw, Download, LockKeyhole } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Smartphone, Monitor, ShieldCheck, ShieldAlert, Link2, Unplug, LockKeyhole, CheckCircle2, CircleSlash, Loader2 } from "lucide-react";
 import { PageShell } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
-import { DEVICE_CHECKS, assessDevice, type Answer, type DeviceType, type Observations, type DeviceReport } from "@/lib/device-assessment";
+import { BROWSER_CHECKS, UNAVAILABLE_DEVICE_CHECKS, runBrowserCheck, summarizeBrowserChecks, type BrowserCheck } from "@/lib/browser-device-checks";
 
 export const Route = createFileRoute("/device-guardian")({
   head: () => ({ meta: [
-    { title: "Device Guardian — Cyber Bro" },
-    { name: "description", content: "Review Android and Windows security with evidence-based guided checks and account recovery steps." },
-    { property: "og:title", content: "Device Guardian — Cyber Bro" },
-    { property: "og:description", content: "Assess user-reported device security findings without claiming browser access to your operating system." },
+    { title: "Protect My Device — Cyber Bro" },
+    { name: "description", content: "Run private, automatic browser-supported security checks with honest device connection and scan coverage information." },
+    { property: "og:title", content: "Protect My Device — Cyber Bro" },
+    { property: "og:description", content: "Local browser checks with no saved scan history. Android and Windows OS checks require an authorized companion." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
   ] }),
   component: DeviceGuardian,
 });
 
-type Review = { id: number; device: DeviceType; time: string; report: DeviceReport };
-
+type Stage = "idle" | "connection" | "scanning" | "result";
 function DeviceGuardian() {
-  const [device, setDevice] = useState<DeviceType>("android");
+  const [device, setDevice] = useState<"android" | "windows">("android");
+  const [stage, setStage] = useState<Stage>("idle");
   const [consent, setConsent] = useState(false);
-  const [started, setStarted] = useState(false);
-  const [answers, setAnswers] = useState<Observations>({});
-  const [report, setReport] = useState<DeviceReport | null>(null);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [fixes, setFixes] = useState<Record<string, boolean>>({});
-  const progress = assessDevice(answers);
+  const [checks, setChecks] = useState<BrowserCheck[]>([]);
+  const [active, setActive] = useState<string | null>(null);
+  const [disconnected, setDisconnected] = useState(false);
+  const generation = useRef(0);
+  useEffect(() => () => { generation.current += 1; }, []);
+  const summary = summarizeBrowserChecks(checks);
 
-  function reset() {
-    setStarted(false);
+  function disconnect() {
+    generation.current += 1;
+    setChecks([]);
+    setActive(null);
     setConsent(false);
-    setAnswers({});
-    setReport(null);
-    setFixes({});
+    setStage("idle");
+    setDisconnected(true);
   }
 
-  function review() {
-    const result = assessDevice(answers);
-    setReport(result);
-    setFixes({});
-    setReviews((previous) => [{ id: Date.now(), device, time: new Date().toLocaleString(), report: result }, ...previous].slice(0, 10));
-  }
-
-  function download() {
-    if (!report) return;
-    const text = [`Cyber Bro — ${device === "android" ? "Android" : "Windows"} guided assessment`, report.state, `${report.checked}/${report.total} items checked`, report.limitations, ...report.findings.flatMap((finding) => [finding.title, `Severity: ${finding.severity}; confidence: ${finding.confidence}`, finding.evidence, finding.explanation, ...finding.actions]), ...report.nextSteps].join("\n\n");
-    const url = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = "cyber-bro-device-report.txt";
-    anchor.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  async function scan() {
+    if (!consent || stage === "scanning") return;
+    const current = ++generation.current;
+    setChecks([]);
+    setStage("scanning");
+    for (const { id, title } of BROWSER_CHECKS) {
+      if (generation.current !== current) return;
+      setActive(id);
+      let result: BrowserCheck;
+      try { result = await runBrowserCheck(id); }
+      catch { result = { id, title, status: "unavailable", evidence: "This check could not be completed in the current browser context.", severity: "Informational", confidence: "No finding collected", recommendation: "Retry in an up-to-date browser on the official HTTPS website." }; }
+      if (generation.current !== current) return;
+      setChecks((previous) => [...previous, result]);
+    }
+    if (generation.current !== current) return;
+    setActive(null);
+    setConsent(false);
+    setStage("result");
   }
 
   return (
     <PageShell title="Protect My Device" intro="Device Guardian · Android & Windows">
       <section className="space-y-4 border-b border-border pb-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <ShieldCheck className="h-9 w-9 text-primary" />
-            <div><h2 className="font-heading text-lg font-semibold">Device Guardian</h2><p className="text-sm text-muted-foreground">Website-only guided assessment</p></div>
-          </div>
-          <span className="text-sm font-medium text-muted-foreground">Not connected</span>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-center gap-3"><ShieldCheck className="h-9 w-9 text-primary" /><div><h2 className="font-heading text-lg font-semibold">Device Guardian</h2><p className="text-sm text-muted-foreground">Private browser security review</p></div></div>
+          <p className="text-sm font-medium text-muted-foreground">{stage === "scanning" ? "Browser check in progress · OS not connected" : "OS device not connected"}</p>
         </div>
-        <p className="text-sm text-muted-foreground">No companion app is connected. This website cannot scan your files, processes, installed apps or operating-system internals. You can review security settings and report what you find.</p>
-        <div className="flex gap-2" role="group" aria-label="Device type">
-          {(["android", "windows"] as const).map((type) => {
-            const Icon = type === "android" ? Smartphone : Monitor;
-            return <Button key={type} variant={device === type ? "default" : "outline"} aria-pressed={device === type} onClick={() => { reset(); setDevice(type); }}><Icon />{type === "android" ? "Android phone" : "Windows computer"}</Button>;
-          })}
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Device type">
+          {(["android", "windows"] as const).map((type) => { const Icon = type === "android" ? Smartphone : Monitor; return <Button key={type} variant={device === type ? "default" : "outline"} aria-pressed={device === type} disabled={stage === "scanning"} onClick={() => { disconnect(); setDisconnected(false); setDevice(type); }}><Icon />{type === "android" ? "Android phone" : "Windows computer"}</Button>; })}
         </div>
-        {!started && <div className="space-y-3">
-          <p className="text-sm font-medium">Permission required — guided review consent</p>
-          <label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1 accent-primary" checked={consent} onChange={(event) => setConsent(event.target.checked)} />I agree to review settings myself and use my answers for this assessment. This does not grant device access.</label>
-          <Button disabled={!consent} onClick={() => setStarted(true)}><ClipboardCheck />Start guided assessment</Button>
-        </div>}
-        <details className="border-t border-border pt-3 text-sm">
-          <summary className="cursor-pointer font-medium">Secure pairing & companion apps</summary>
-          <div className="mt-3 space-y-2 text-muted-foreground">
-            <p>QR pairing alone never grants operating-system access. Secure pairing is not available here yet; no pairing code or token has been generated.</p>
-            <p>Pairing, one-time links, expiry, disconnect and session revocation require a connected account service. Lovable Cloud must be enabled from the main project chat, not this draft.</p>
-            <p>Authorized Android app checks require a separate Android companion app and explicit device permissions. Windows file and process checks require a separate Windows agent. Neither is installed or connected by this website.</p>
-            <p>A future companion connection must show its permission scope and collect only supported findings after consent. No device actions will run silently.</p>
-          </div>
-        </details>
+        {stage === "idle" && <><p className="text-sm text-muted-foreground">Check this browser first. Deeper {device === "android" ? "Android" : "Windows"} security checks need a compatible, explicitly authorized {device === "android" ? "companion app" : "security agent"}.</p><Button onClick={() => { setStage("connection"); setDisconnected(false); }}><Link2 />Connect My Device</Button></>}
+        {disconnected && <p role="status" className="text-sm text-muted-foreground">Disconnected. Local scan results have been cleared. No pairing session was created.</p>}
+        {stage !== "idle" && <Button variant="outline" onClick={disconnect}><Unplug />{stage === "scanning" ? "Cancel & Disconnect Device" : "Disconnect Device"}</Button>}
       </section>
 
-      {started && <section className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">Guided checks</h2><Button variant="outline" onClick={reset}><RotateCcw />End review</Button></div>
-        <p className="text-sm text-muted-foreground" aria-live="polite">{progress.checked} of {progress.total} checked · {progress.checked < progress.total ? "Scan incomplete" : "Ready for review"}</p>
-        <progress value={progress.checked} max={progress.total} className="h-2 w-full accent-primary" aria-label="Guided assessment progress" />
-        <div className="divide-y divide-border">
-          {DEVICE_CHECKS.map((check, index) => <fieldset key={check.id} className="space-y-3 py-5">
-            <legend className="pt-4 text-sm font-semibold">{index + 1}. {check.label}</legend>
-            <p className="text-sm text-muted-foreground">{check[device]}</p>
-            <div className="flex flex-wrap gap-4">
-              {(["yes", "no", "unknown"] as const).map((answer: Answer) => <label key={answer} className="flex cursor-pointer items-center gap-2 text-sm">
-                <input type="radio" name={check.id} value={answer} className="accent-primary" checked={answers[check.id]?.answer === answer} onChange={() => { setAnswers((previous) => ({ ...previous, [check.id]: { answer, detail: previous[check.id]?.detail ?? "" } })); setReport(null); }} />
-                {answer === "yes" ? "Yes" : answer === "no" ? "No" : "Not sure"}
-              </label>)}
-            </div>
-            {answers[check.id]?.answer === "yes" && <div><label htmlFor={`evidence-${check.id}`} className="text-xs text-muted-foreground">Optional evidence — app name, permission or warning (no passwords or personal details)</label><textarea id={`evidence-${check.id}`} maxLength={500} rows={2} value={answers[check.id]?.detail ?? ""} onChange={(event) => { const detail = event.target.value; setAnswers((previous) => ({ ...previous, [check.id]: { answer: "yes", detail } })); setReport(null); }} className="mt-1 w-full rounded-lg border border-input bg-background p-3 text-sm" /></div>}
-          </fieldset>)}
+      {stage === "connection" && <section className="space-y-5">
+        <h2 className="font-heading text-lg font-semibold">Connect your device</h2>
+        <div className="divide-y divide-border border-y border-border">
+          <div className="space-y-2 py-4"><h3 className="flex items-center gap-2 font-semibold"><Monitor className="h-4 w-4 text-primary" />This browser <span className="text-xs font-normal text-safe">Available</span></h3><p className="text-sm text-muted-foreground">Automatically checks this page’s secure context, transport, cryptography support, embedding and available site-permission states. No camera, microphone, location, file or OS access is requested.</p></div>
+          <div className="space-y-2 py-4"><h3 className="font-semibold">{device === "android" ? "Android companion app" : "Windows security agent"}</h3><p className="text-sm font-medium text-warning">Device connection unavailable</p><p className="text-sm text-muted-foreground">No compatible companion or security integration is configured. QR pairing and one-time links are unavailable. A QR code alone cannot grant operating-system access.</p></div>
         </div>
-        <Button onClick={review}><ShieldCheck />Review findings</Button>
+        <div className="space-y-2 text-sm"><h3 className="flex items-center gap-2 font-semibold"><LockKeyhole className="h-4 w-4 text-primary" />Private, temporary processing</h3><p className="text-muted-foreground">Checks run locally in this tab. Temporary inputs are discarded after each check; only the minimal findings remain in memory while you view the result. Disconnecting, leaving or reloading clears them. No scan database, saved history, external AI calls or third-party scan requests are used.</p><p className="text-muted-foreground">The website itself is served normally; ordinary page requests are separate from this local scan. Permission queries read only this site’s existing permission state, never other apps’ permissions. Account data is separate and is not inspected.</p></div>
+        <label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1 accent-primary" checked={consent} onChange={(event) => setConsent(event.target.checked)} />I authorize these local browser checks and temporary display of their results. This does not connect to my operating system.</label>
+        <Button disabled={!consent} onClick={scan}><ShieldCheck />Run browser checks</Button>
       </section>}
 
-      {report && <section className="space-y-4 border-t border-border pt-6" aria-live="polite">
-        <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="flex items-center gap-2 text-lg font-semibold">{report.state === "Potential threat found" ? <ShieldAlert className="text-warning" /> : <ShieldCheck className="text-primary" />}{report.state}</h2><Button variant="outline" onClick={download}><Download />Download report</Button></div>
-        <p className="text-sm text-muted-foreground">{report.checked}/{report.total} items checked</p>
-        <p className="border-l-2 border-warning pl-3 text-sm text-muted-foreground">{report.limitations}</p>
-        {report.findings.map((finding) => <article key={finding.id} className="rounded-lg border border-border bg-card p-4">
-          <h3 className="font-semibold">{finding.title}</h3>
-          <p className="mt-1 text-xs text-muted-foreground">Severity: {finding.severity} · Confidence: {finding.confidence}</p>
-          <p className="mt-3 break-words text-sm"><strong>Evidence:</strong> {finding.evidence}</p>
-          <p className="mt-2 text-sm text-muted-foreground">{finding.explanation}</p>
-          <ul className="mt-3 space-y-3">{finding.actions.map((action, index) => { const key = `${finding.id}-${index}`; return <li key={key}><label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1 accent-primary" checked={fixes[key] ?? false} onChange={(event) => setFixes((previous) => ({ ...previous, [key]: event.target.checked }))} />{action}</label></li>; })}</ul>
-        </article>)}
-        <h3 className="font-semibold">Next steps</h3>
-        <ul className="list-disc space-y-2 pl-5 text-sm">{report.nextSteps.map((step) => <li key={step}>{step}</li>)}</ul>
-        <p className="text-xs text-muted-foreground">Checked actions record only what you report doing; no settings were changed by this website. No automatic uninstall, deletion or reset is performed.</p>
+      {(stage === "scanning" || stage === "result") && <section className="space-y-4" aria-live="polite">
+        <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="font-heading text-lg font-semibold">{stage === "scanning" ? "Checking this browser" : "Assessment results"}</h2><span className="text-sm text-muted-foreground">{checks.length}/{BROWSER_CHECKS.length} checks processed</span></div>
+        <progress className="h-2 w-full accent-primary" value={checks.length} max={BROWSER_CHECKS.length} aria-label="Browser checks progress" />
+        {stage === "result" && <div className="space-y-2 border-l-2 border-warning pl-4"><h3 className="flex items-center gap-2 font-semibold">{summary.state === "Potential security threat detected" ? <ShieldAlert className="h-5 w-5 text-warning" /> : <CircleSlash className="h-5 w-5 text-warning" />}{summary.state}</h3><p className="text-sm font-medium">Browser checks: {summary.checkedState}</p><p className="text-sm text-muted-foreground">{summary.completed} completed · {summary.unavailable} check groups unavailable. Operating-system coverage is missing. These observations concern this page, not whether your device is hacked or malware-free.</p><p className="text-xs text-muted-foreground">Local check access has ended. No temporary pairing session exists to revoke. Disconnect Device clears the displayed result.</p></div>}
+        <ul className="divide-y divide-border">{BROWSER_CHECKS.map(({ id, title }) => { const result = checks.find((check) => check.id === id); return <li key={id} className="flex items-center justify-between gap-3 py-3 text-sm"><span>{title}</span><span className="flex shrink-0 items-center gap-2 text-muted-foreground">{result ? <>{result.status === "passed" ? <CheckCircle2 className="h-4 w-4 text-safe" /> : result.status === "attention" ? <ShieldAlert className="h-4 w-4 text-warning" /> : <CircleSlash className="h-4 w-4" />}{result.status === "passed" ? "Passed" : result.status === "attention" ? "Needs attention" : result.status === "unavailable" ? "Unavailable" : "Observed"}</> : active === id ? <><Loader2 className="h-4 w-4 motion-safe:animate-spin" />Checking</> : "Pending"}</span></li>; })}</ul>
+        {stage === "result" && <div className="space-y-3">{checks.map((check) => <article key={check.id} className="rounded-lg border border-border bg-card p-4"><h3 className="font-semibold">{check.title}</h3><p className="mt-1 text-xs text-muted-foreground">Severity: {check.severity} · Confidence: {check.confidence}</p><p className="mt-3 text-sm"><strong>Evidence:</strong> {check.evidence}</p><p className="mt-2 text-sm text-muted-foreground"><strong>Recommended action:</strong> {check.recommendation}</p></article>)}</div>}
       </section>}
 
-      <section className="space-y-3 border-t border-border pt-6">
-        <h2 className="flex items-center gap-2 font-semibold"><LockKeyhole className="h-4 w-4 text-primary" />Review history</h2>
-        <p className="text-xs text-muted-foreground">This page session only — not saved to an account. Download a report before leaving. Reloading clears these reviews.</p>
-        {!reviews.length ? <p className="text-sm text-muted-foreground">No guided reviews yet.</p> : <ul className="divide-y divide-border">{reviews.map((entry) => <li key={entry.id} className="flex flex-wrap items-center justify-between gap-2 py-3"><div><p className="text-sm font-medium">{entry.device === "android" ? "Android" : "Windows"} · {entry.report.state}</p><p className="text-xs text-muted-foreground">{entry.time} · {entry.report.checked}/{entry.report.total} checked</p></div><Button variant="outline" size="sm" onClick={() => { setReport(entry.report); setFixes({}); }}>View report</Button></li>)}</ul>}
-      </section>
+      {stage !== "idle" && <section className="space-y-3 border-t border-border pt-5"><h2 className="font-heading text-lg font-semibold">Unavailable device checks</h2><p className="text-sm text-muted-foreground">These checks have not run. No files, processes, installed apps, account sessions or operating-system settings were accessed.</p><ul className="divide-y divide-border">{UNAVAILABLE_DEVICE_CHECKS.map((check) => <li key={check.title} className="py-3"><p className="flex items-start gap-2 text-sm font-medium"><CircleSlash className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />{check.title}</p><p className="mt-1 pl-6 text-xs text-muted-foreground">Requires: {check.permission}. Not configured.</p></li>)}</ul></section>}
     </PageShell>
   );
 }
