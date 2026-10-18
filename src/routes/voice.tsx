@@ -125,8 +125,11 @@ function VoicePage() {
   const [hasVoices, setHasVoices] = useState<boolean | null>(null);
   const recRef = useRef<Recognition | null>(null);
   const sampleTimer = useRef<number | null>(null);
+  const mounted = useRef(false);
+  const pendingStart = useRef(false);
 
   useEffect(() => {
+    mounted.current = true;
     setSupported(getRecognitionCtor() !== null);
     try {
       setInFrame(window.self !== window.top);
@@ -140,6 +143,7 @@ function VoicePage() {
       loadVoices();
       window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
       return () => {
+        mounted.current = false;
         window.speechSynthesis.removeEventListener("voiceschanged", loadVoices);
         window.speechSynthesis.cancel();
         if (sampleTimer.current !== null) window.clearTimeout(sampleTimer.current);
@@ -147,7 +151,7 @@ function VoicePage() {
       };
     }
     setHasVoices(false);
-    return () => recRef.current?.stop();
+    return () => { mounted.current = false; recRef.current?.stop(); };
   }, []);
 
   const runAudioTest = () => {
@@ -185,6 +189,7 @@ function VoicePage() {
   };
 
   const start = async () => {
+    if (pendingStart.current || recRef.current) return;
     const Ctor = getRecognitionCtor();
     if (!Ctor) {
       setError("Voice input is not supported in this browser. Please use Chrome or Edge.");
@@ -193,7 +198,10 @@ function VoicePage() {
     setError("");
     setResult(null);
     setStarting(true);
+    pendingStart.current = true;
     const micError = await requestMic();
+    pendingStart.current = false;
+    if (!mounted.current) return;
     setStarting(false);
     if (micError) {
       setError(micError);
@@ -216,6 +224,8 @@ function VoicePage() {
       setText(t);
     };
     rec.onerror = (e) => {
+      setListening(false);
+      recRef.current = null;
       setError(
         e.error === "not-allowed" || e.error === "service-not-allowed"
           ? inFrame
@@ -232,12 +242,14 @@ function VoicePage() {
                   : `Voice input stopped (${e.error}). Please try again.`,
       );
     };
-    rec.onend = () => setListening(false);
+    rec.onend = () => { setListening(false); recRef.current = null; };
     recRef.current = rec;
     try {
       rec.start();
       setListening(true);
     } catch {
+      setListening(false);
+      recRef.current = null;
       setError("Could not start the microphone. Please try again.");
     }
   };
