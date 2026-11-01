@@ -40,9 +40,10 @@ function MediaDetector() {
 
   function remove() { selection.current += 1; setFile(null); setValid(false); setValidating(false); setError(""); setConsent(false); if (picker.current) picker.current.value = ""; }
   async function select(files: FileList | File[], origin = "Uploaded media") {
+    const selected = Array.from(files);
     remove();
-    if (files.length !== 1) { setError("Choose one photo or video at a time."); return; }
-    const next = files[0];
+    if (selected.length !== 1) { setError("Choose one photo or video at a time."); return; }
+    const next = selected[0];
     if (!next) return;
     const invalid = validateMedia(next);
     if (invalid) { setError(invalid); return; }
