@@ -92,7 +92,7 @@ export function MediaCapture({ onUse, onClose }: { onUse: (file: File) => void; 
         if (!alive.current) { chunks.length = 0; return; }
         setRecording(false); setReady(false);
         if (bytes > MAX_VIDEO_BYTES) { chunks.length = 0; setError("Recording exceeded 15 MB. Please record a shorter video."); return; }
-        const type = recordType.split(";")[0];
+        const type = recordType.split(";")[0] ?? "video/webm";
         const blob = new Blob(chunks, { type }); chunks.length = 0;
         if (!blob.size) { setError("No video was captured. Try again."); return; }
         setCaptured(new File([blob], type === "video/mp4" ? "camera-video.mp4" : "camera-video.webm", { type }));
