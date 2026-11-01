@@ -84,17 +84,25 @@ export function MediaCapture({ onUse, onClose }: { onUse: (file: File) => void; 
       const instance = new MediaRecorder(recordingStream, { mimeType: recordType, videoBitsPerSecond: 1500000 });
       const chunks: Blob[] = [];
       let bytes = 0;
+      const startedAt = performance.now();
       recorder.current = instance;
       instance.ondataavailable = (event) => { if (event.data.size) { chunks.push(event.data); bytes += event.data.size; if (bytes > MAX_VIDEO_BYTES && instance.state === "recording") instance.stop(); } };
       instance.onerror = () => { stopTracks(); if (alive.current) { setError("Video recording failed. Upload a file instead."); setRecording(false); setReady(false); } };
-      instance.onstop = () => {
+      instance.onstop = async () => {
         stopTracks();
         if (!alive.current) { chunks.length = 0; return; }
         setRecording(false); setReady(false);
         if (bytes > MAX_VIDEO_BYTES) { chunks.length = 0; setError("Recording exceeded 15 MB. Please record a shorter video."); return; }
         const type = recordType.split(";")[0] ?? "video/webm";
-        const blob = new Blob(chunks, { type }); chunks.length = 0;
+        let blob = new Blob(chunks, { type }); chunks.length = 0;
         if (!blob.size) { setError("No video was captured. Try again."); return; }
+        try {
+          if (type === "video/webm") {
+            const { default: fixDuration } = await import("fix-webm-duration");
+            blob = await fixDuration(blob, performance.now() - startedAt, { logger: false });
+          }
+        } catch { if (alive.current) setError("Recording duration could not be verified. Retake the video."); return; }
+        if (!alive.current) return;
         setCaptured(new File([blob], type === "video/mp4" ? "camera-video.mp4" : "camera-video.webm", { type }));
       };
       instance.start(250); setRecording(true); setError("");
