@@ -78,6 +78,7 @@ const TOOLS = [
   { to: "/voice", icon: Mic, title: "Voice Assistant", desc: "Speak a message to check it" },
   { to: "/emergency", icon: PhoneCall, title: "Emergency Support", desc: "Get help right away" },
   { to: "/device-guardian", icon: ShieldCheck, title: "Protect My Device", desc: "Review Android or Windows security" },
+  { to: "/media-detector", icon: Sparkles, title: "AI vs Human Media Detector", desc: "Photo & video · Setup required" },
 ] as const;
 
 type Status = "idle" | "loading" | "done" | "error";
