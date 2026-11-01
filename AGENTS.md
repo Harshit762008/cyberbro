@@ -9,5 +9,5 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-- Device Guardian uses evidence-only guided assessment rules in a browser-safe module; no device access or pairing is simulated because OS checks require an authorized companion and pairing requires a real account service.
+- Device Guardian runs consented browser-only checks through a browser-safe module and retains only transient component-state findings; no device access or pairing is simulated because OS checks require an authorized companion and pairing requires a real account service.
 - Password strengthening preserves every supplied character in order and adds cryptographic random separators and characters locally, so suggestions build on the user's input without transmitting it.
