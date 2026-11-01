@@ -11,3 +11,4 @@
 
 - Device Guardian runs consented browser-only checks through a browser-safe module and retains only transient component-state findings; no device access or pairing is simulated because OS checks require an authorized companion and pairing requires a real account service.
 - Password strengthening preserves every supplied character in order and adds cryptographic random separators and characters locally, so suggestions build on the user's input without transmitting it.
+- Media selection and capture use local File objects and revoked object URLs with shared validation rules; analysis stays explicitly unavailable until a genuine server integration is configured, preventing accidental fabricated or client-secret-backed assessments.

@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DeviceGuardianRouteImport } from './routes/device-guardian'
 import { Route as EmergencyRouteImport } from './routes/emergency'
 import { Route as LinkCheckRouteImport } from './routes/link-check'
+import { Route as MediaDetectorRouteImport } from './routes/media-detector'
 import { Route as PasswordCheckRouteImport } from './routes/password-check'
 import { Route as QrScanRouteImport } from './routes/qr-scan'
 import { Route as VoiceRouteImport } from './routes/voice'
@@ -37,6 +38,11 @@ const LinkCheckRoute = LinkCheckRouteImport.update({
   path: '/link-check',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MediaDetectorRoute = MediaDetectorRouteImport.update({
+  id: '/media-detector',
+  path: '/media-detector',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PasswordCheckRoute = PasswordCheckRouteImport.update({
   id: '/password-check',
   path: '/password-check',
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/device-guardian': typeof DeviceGuardianRoute
   '/emergency': typeof EmergencyRoute
   '/link-check': typeof LinkCheckRoute
+  '/media-detector': typeof MediaDetectorRoute
   '/password-check': typeof PasswordCheckRoute
   '/qr-scan': typeof QrScanRoute
   '/voice': typeof VoiceRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/device-guardian': typeof DeviceGuardianRoute
   '/emergency': typeof EmergencyRoute
   '/link-check': typeof LinkCheckRoute
+  '/media-detector': typeof MediaDetectorRoute
   '/password-check': typeof PasswordCheckRoute
   '/qr-scan': typeof QrScanRoute
   '/voice': typeof VoiceRoute
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/device-guardian': typeof DeviceGuardianRoute
   '/emergency': typeof EmergencyRoute
   '/link-check': typeof LinkCheckRoute
+  '/media-detector': typeof MediaDetectorRoute
   '/password-check': typeof PasswordCheckRoute
   '/qr-scan': typeof QrScanRoute
   '/voice': typeof VoiceRoute
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/device-guardian'
     | '/emergency'
     | '/link-check'
+    | '/media-detector'
     | '/password-check'
     | '/qr-scan'
     | '/voice'
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/device-guardian'
     | '/emergency'
     | '/link-check'
+    | '/media-detector'
     | '/password-check'
     | '/qr-scan'
     | '/voice'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/device-guardian'
     | '/emergency'
     | '/link-check'
+    | '/media-detector'
     | '/password-check'
     | '/qr-scan'
     | '/voice'
@@ -116,6 +128,7 @@ export interface RootRouteChildren {
   DeviceGuardianRoute: typeof DeviceGuardianRoute
   EmergencyRoute: typeof EmergencyRoute
   LinkCheckRoute: typeof LinkCheckRoute
+  MediaDetectorRoute: typeof MediaDetectorRoute
   PasswordCheckRoute: typeof PasswordCheckRoute
   QrScanRoute: typeof QrScanRoute
   VoiceRoute: typeof VoiceRoute
@@ -151,6 +164,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LinkCheckRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/media-detector': {
+      id: '/media-detector'
+      path: '/media-detector'
+      fullPath: '/media-detector'
+      preLoaderRoute: typeof MediaDetectorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/password-check': {
       id: '/password-check'
       path: '/password-check'
@@ -180,6 +200,7 @@ const rootRouteChildren: RootRouteChildren = {
   DeviceGuardianRoute: DeviceGuardianRoute,
   EmergencyRoute: EmergencyRoute,
   LinkCheckRoute: LinkCheckRoute,
+  MediaDetectorRoute: MediaDetectorRoute,
   PasswordCheckRoute: PasswordCheckRoute,
   QrScanRoute: QrScanRoute,
   VoiceRoute: VoiceRoute,
