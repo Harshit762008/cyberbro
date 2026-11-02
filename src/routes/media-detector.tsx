@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Camera, Upload, ImagePlus, Trash2, RefreshCw, ShieldCheck, LockKeyhole, Info } from "lucide-react";
+import { Camera, Upload, ImagePlus, Trash2, RefreshCw, ShieldCheck, LockKeyhole } from "lucide-react";
 import { PageShell } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
 import { MediaCapture } from "@/components/MediaCapture";
