@@ -242,7 +242,7 @@ function Index() {
                     <p className="text-base font-semibold text-foreground">{style.label}</p>
                     <p className="text-xs text-muted-foreground">{result.band}</p>
                     <p className="mt-0.5 text-xs font-medium text-foreground">
-                      Category: {result.category}
+                      Category: {result.category} · {source === "ai" ? "AI review (Gemini)" : "On-device check"}{error && <span className="block text-warning">{error}</span>}
                       {result.uncertain && " · Uncertain"}
                     </p>
                   </div>
