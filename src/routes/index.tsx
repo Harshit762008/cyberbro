@@ -20,10 +20,13 @@ import {
 import { AppHeader } from "@/components/AppHeader";
 import {
   analyzeMessage,
+  bandFor,
   shouldShowEmergency,
   EMERGENCY_NUMBER,
   type Analysis,
 } from "@/lib/analyze-message";
+import { useServerFn } from "@tanstack/react-start";
+import { aiAnalyzeMessage } from "@/lib/ai.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -89,7 +92,10 @@ function Index() {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
 
-  const handleAnalyze = () => {
+  const runAi = useServerFn(aiAnalyzeMessage);
+  const [source, setSource] = useState<"ai" | "local">("local");
+
+  const handleAnalyze = async () => {
     const text = message.trim();
     if (text.length < 5) {
       setStatus("error");
@@ -99,16 +105,35 @@ function Index() {
     }
     setStatus("loading");
     setError("");
-    // Short pause so the "checking" state is visible; the check itself runs on this device.
-    window.setTimeout(() => {
-      try {
-        setResult(analyzeMessage(text));
-        setStatus("done");
-      } catch {
-        setStatus("error");
-        setError("Something went wrong while checking. Please try again.");
+    const local = analyzeMessage(text);
+    try {
+      const res = await runAi({ data: { text } });
+      if (res.ok) {
+        const s = res.result.score;
+        setResult({
+          ...local,
+          score: s,
+          level: s < 4 ? "safe" : s < 7.5 ? "warning" : "danger",
+          band: bandFor(s),
+          category: res.result.category,
+          uncertain: false,
+          immediateDanger: res.result.immediateDanger,
+          reasons: res.result.reasons.length ? res.result.reasons : local.reasons,
+          tips: res.result.tips.length ? res.result.tips : local.tips,
+        });
+        setSource("ai");
+      } else {
+        setResult(local);
+        setSource("local");
+        setError(`AI check unavailable (${res.error}) — showing the on-device check.`);
       }
-    }, 350);
+      setStatus("done");
+    } catch {
+      setResult(local);
+      setSource("local");
+      setError("AI check unavailable — showing the on-device check.");
+      setStatus("done");
+    }
   };
 
   const handleClear = () => {
