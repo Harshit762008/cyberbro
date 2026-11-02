@@ -8,4 +8,4 @@
 - [ ] Sign-up, login and per-user saved data — blocked until Lovable Cloud is enabled from the main project chat
 - [x] Replace Device Guardian questionnaire with connection-first automatic browser-supported checks, unavailable-check disclosure and ephemeral results
 - [x] Add AI vs Human Media Detector with real uploads, camera photo/video capture, privacy consent and honest configuration state
-- [ ] Connect and test Gemini media analysis — blocked until backend setup is available from the main project chat and the user configures GEMINI_API_KEY
+- [x] Gemini media analysis and AI message scoring via built-in AI (photo tested; video untested)
