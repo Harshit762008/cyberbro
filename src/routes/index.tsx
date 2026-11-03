@@ -81,7 +81,7 @@ const TOOLS = [
   { to: "/voice", icon: Mic, title: "Voice Assistant", desc: "Speak a message to check it" },
   { to: "/emergency", icon: PhoneCall, title: "Emergency Support", desc: "Get help right away" },
   { to: "/device-guardian", icon: ShieldCheck, title: "Protect My Device", desc: "Review Android or Windows security" },
-  { to: "/media-detector", icon: Sparkles, title: "AI vs Human Media Detector", desc: "Photo & video · Setup required" },
+  { to: "/media-detector", icon: Sparkles, title: "AI vs Human Media Detector", desc: "Photo & video · AI analysis" },
 ] as const;
 
 type Status = "idle" | "loading" | "done" | "error";
@@ -164,14 +164,14 @@ function Index() {
         <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h1 className="text-lg font-semibold text-foreground">Check a suspicious message</h1>
-            <span className="inline-flex items-center gap-1 rounded-full bg-warning/20 px-2.5 py-0.5 text-[11px] font-semibold text-foreground">
+            <span className="inline-flex items-center gap-1 rounded-full bg-safe/20 px-2.5 py-0.5 text-[11px] font-semibold text-foreground">
               <Info className="h-3 w-3" />
-              Demo mode — rule-based check, not AI
+              AI-powered check
             </span>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            Paste any doubtful SMS, WhatsApp or email message here — we will look for common scam
-            signs. The check runs on your device; nothing is uploaded.
+            Paste any doubtful SMS, WhatsApp or email message here — our AI will look for common
+            scam signs. The message is sent once for analysis and is not saved.
           </p>
 
           <textarea
@@ -259,8 +259,10 @@ function Index() {
                 />
               </div>
               <p className="mt-2 text-xs text-muted-foreground">
-                Danger score: 0 = no warning signs found, 10 = very dangerous. Demo mode: based on
-                keyword patterns only, so always use your own judgement.
+                Danger score: 0 = no warning signs found, 10 = very dangerous.{" "}
+                {source === "ai"
+                  ? "Assessed by AI — always use your own judgement too."
+                  : "AI unavailable, so this used the on-device keyword check — always use your own judgement."}
               </p>
             </div>
 
