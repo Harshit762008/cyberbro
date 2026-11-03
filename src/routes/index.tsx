@@ -259,8 +259,10 @@ function Index() {
                 />
               </div>
               <p className="mt-2 text-xs text-muted-foreground">
-                Danger score: 0 = no warning signs found, 10 = very dangerous. Demo mode: based on
-                keyword patterns only, so always use your own judgement.
+                Danger score: 0 = no warning signs found, 10 = very dangerous.{" "}
+                {source === "ai"
+                  ? "Assessed by AI — always use your own judgement too."
+                  : "AI unavailable, so this used the on-device keyword check — always use your own judgement."}
               </p>
             </div>
 
