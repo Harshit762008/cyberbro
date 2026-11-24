@@ -9,3 +9,4 @@
 - [x] Replace Device Guardian questionnaire with connection-first automatic browser-supported checks, unavailable-check disclosure and ephemeral results
 - [x] Add AI vs Human Media Detector with real uploads, camera photo/video capture, privacy consent and honest configuration state
 - [x] Gemini media analysis and AI message scoring via built-in AI (photo tested; video untested)
+- [ ] Add the user's Google Gemini API key securely and route message analysis through it; pending key submission and provider choice
